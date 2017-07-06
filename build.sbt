@@ -32,6 +32,9 @@ libraryDependencies ++= Seq(
   "org.scalatest"         %%  "scalatest"       % "2.2.0" % "test"
 )
 
+// https://mvnrepository.com/artifact/org.tensorflow/tensorflow
+libraryDependencies += "org.tensorflow" % "tensorflow" % "1.2.1"
+
 // When creating fat jar, remote some files with
 // bad signatures and resolve conflicts by taking the first
 // versions of shared packaged types.
