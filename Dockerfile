@@ -6,3 +6,5 @@ MAINTAINER Yoni Nachmany, yoninachmany@gmail.com
 RUN apt-get update
 RUN apt-get install default-jre -y
 RUN apt-get install default-jdk -y
+
+COPY target/scala-2.11/geotrellis-sbt-template-assembly-0.1.0.jar /tmp

@@ -12,4 +12,4 @@ build:
 # 	if [ "${TAG}" != "" -a "${TAG}" != "latest" ]; then docker tag ${IMG}:latest ${IMG}:${TAG} && docker push ${IMG}:${TAG}; fi
 
 test: build
-	docker run -it --rm ${TAG} java -version
+	docker run -it --rm ${TAG} bash
