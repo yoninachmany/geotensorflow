@@ -29,6 +29,8 @@ import org.tensorflow.Output;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlow;
+// import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
+import geotrellis.raster.io.geotiff.*;
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 public class LabelImage {
