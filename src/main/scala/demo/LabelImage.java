@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import org.tensorflow.DataType;
@@ -29,8 +30,10 @@ import org.tensorflow.Output;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlow;
-// import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
+import org.tensorflow.Shape;
+import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
 import geotrellis.raster.io.geotiff.*;
+import geotrellis.raster.MultibandTile;
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 public class LabelImage {
@@ -61,9 +64,10 @@ public class LabelImage {
     byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
     List<String> labels =
         readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
-    byte[] imageBytes = readAllBytesOrExit(Paths.get(imageFile));
 
-    try (Tensor image = constructAndExecuteGraphToNormalizeImage(imageBytes)) {
+    String imagePathString = Paths.get(imageFile).toString();
+
+    try (Tensor image = constructAndExecuteGraphToNormalizeImage(imagePathString)) {
       float[] labelProbabilities = executeInceptionGraph(graphDef, image);
       int bestLabelIdx = maxIndex(labelProbabilities);
       System.out.println(
@@ -73,7 +77,7 @@ public class LabelImage {
     }
   }
 
-  private static Tensor constructAndExecuteGraphToNormalizeImage(byte[] imageBytes) {
+  private static Tensor constructAndExecuteGraphToNormalizeImage(String imagePathString) {
     try (Graph g = new Graph()) {
       GraphBuilder b = new GraphBuilder(g);
       // Some constants specific to the pre-trained model at:
@@ -90,13 +94,14 @@ public class LabelImage {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      final Output input = b.constant("input", imageBytes);
+      Tensor imageTensor = b.decodeTiff(imagePathString);
+      final Output input = b.constantTensor("input", imageTensor);
       final Output output =
           b.div(
               b.sub(
                   b.resizeBilinear(
                       b.expandDims(
-                          b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+                          b.cast(input, DataType.FLOAT),
                           b.constant("make_batch", 0)),
                       b.constant("size", new int[] {H, W})),
                   b.constant("mean", mean)),
@@ -191,6 +196,32 @@ public class LabelImage {
           .output(0);
     }
 
+    /**
+     * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
+     * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
+     * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
+     */
+    Tensor decodeTiff(String imagePathString) {
+      // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
+      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
+
+      int height = tile.rows();
+      int width = tile.cols();
+      int channels = tile.bandCount();
+
+      int[][][] imageDataArray = new int[height][width][channels];
+      for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+          for (int c = 0; c < channels; c++) {
+            imageDataArray[h][w][c] = tile.band(c).get(w, h);
+          }
+        }
+      }
+
+      Tensor imageTensor = Tensor.create(imageDataArray);
+      return imageTensor;
+    }
+
     Output constant(String name, Object value) {
       try (Tensor t = Tensor.create(value)) {
         return g.opBuilder("Const", name)
@@ -199,6 +230,14 @@ public class LabelImage {
             .build()
             .output(0);
       }
+    }
+
+    Output constantTensor(String name, Tensor t) {
+      return g.opBuilder("Const", name)
+          .setAttr("dtype", t.dataType())
+          .setAttr("value", t)
+          .build()
+          .output(0);
     }
 
     private Output binaryOp(String type, Output in1, Output in2) {
