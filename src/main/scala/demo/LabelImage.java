@@ -42,7 +42,7 @@ public class LabelImage {
         "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip";
     s.println(
         "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)");
-    s.println("to label JPEG images.");
+    s.println("to label Tiff images.");
     s.println("TensorFlow version: " + TensorFlow.version());
     s.println();
     s.println("Usage: label_image <model dir> <image file>");
@@ -54,6 +54,8 @@ public class LabelImage {
   }
 
   public static void main(String[] args) {
+    long startTime = System.currentTimeMillis();
+
     if (args.length != 2) {
       printUsage(System.err);
       System.exit(1);
@@ -75,6 +77,9 @@ public class LabelImage {
               "BEST MATCH: %s (%.2f%% likely)",
               labels.get(bestLabelIdx), labelProbabilities[bestLabelIdx] * 100f));
     }
+    long stopTime = System.currentTimeMillis();
+    long elapsedTime = stopTime - startTime;
+    System.out.println(elapsedTime);
   }
 
   private static Tensor constructAndExecuteGraphToNormalizeImage(String imagePathString) {
