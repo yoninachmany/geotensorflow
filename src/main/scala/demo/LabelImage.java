@@ -54,8 +54,6 @@ public class LabelImage {
   }
 
   public static void main(String[] args) {
-    long startTime = System.currentTimeMillis();
-
     if (args.length != 2) {
       printUsage(System.err);
       System.exit(1);
@@ -63,6 +61,7 @@ public class LabelImage {
     String modelDir = args[0];
     String imageFile = args[1];
 
+    long startTime = System.currentTimeMillis();
     byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
     List<String> labels =
         readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
