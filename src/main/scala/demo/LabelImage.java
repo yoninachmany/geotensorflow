@@ -99,7 +99,7 @@ public class LabelImage {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      Tensor imageTensor = b.decodeTiff(imagePathString);
+      Tensor imageTensor = b.decodeTiffBytes(imagePathString);
 
       final Output input = b.constantTensor("input", imageTensor);
       final Output output =
@@ -212,25 +212,24 @@ public class LabelImage {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
 
       // Approach 1: Tensor.create(Object o)
+      // Problem: BEST MATCH label is the same, but percentage is different
       // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
       MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
       int height = tile.rows();
       int width = tile.cols();
       int channels = tile.bandCount();
-      long[] shape = {(long) height, (long) width, (long) channels};
-
-      byte[] byteArray = new byte[(int) (height * width * channels)];
+      int[][][] int3DArray = new int[height][width][channels];
       for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
           for (int c = 0; c < channels; c++) {
-            byteArray[h*w*c + w*c + c] = (byte) (tile.band(c).get(w, h));
+            int3DArray[h][w][c] = tile.band(c).get(w, h);
           }
         }
       }
 
-      Tensor imageTensor = Tensor.create(imageDataArray);
+      Tensor imageTensor = Tensor.create(int3DArray);
       System.out.println(imageTensor.dataType());
-      // Problem: DataType.INT32 - should be is DataType.UINT8
+      // Observation: DataType.INT32 - should be is DataType.UINT8
       // Reason: dataTypeOf(Object o) -> int instances dtypes are DataType.INT32
       // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
       return imageTensor;
@@ -247,71 +246,30 @@ public class LabelImage {
       int width = tile.cols();
       int channels = tile.bandCount();
       long[] shape = {(long) height, (long) width, (long) channels};
-      byte[] imageDataArray = new byte[height * width * channels];
+      byte[] byteArray = new byte[height * width * channels];
       // What is the order of bytes?
-      // Option 1: all R, all G, all B
-      // Option 2: R, G, B, height, width, channels
-      for (int i = 0; i < imageDataArray.length; i++) {
-        int byteIndex = imageDataArray.length/channels;
-        int c = i % channels;
-        Tile t = tile.band(c);
-        System.out.println(t);
-        imageDataArray[i] = t.toBytes[byteIndex];
+      // Option a: all R, all G, all B
+      // Problem: BEST MATCH: toilet seat (25.78% likely)
+      int bandSize = height * width;
+      for (int i = 0; i < channels; i++) {
+        System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize);
       }
-      // System.out.println(imageDataArray.length);
-      // int h = 0;
-      // int w = 0;
-      // for (int i = 0; i < imageDataArray.length; i++) {
-      //   int c = i % channels;
-      //   if (i % channels == 0) {
-      //     w++;
-      //   }
-      //   if (i % channels * width == 0) {
-      //     h++;
-      //   }
-      //   Tile t = tile.band(c);
-      //   int pre = t.get(w, h);
-      //   System.out.println(pre);
-      //   imageDataArray[i] = (byte) (pre);
-      // }
-      // for (int h = 0; h < height; h++) {
-      //   for (int w = 0; w < width; w++) {
-      //     for (int c = 0; c < channels; c++) {
-      //       imageDataArray[h*w*c+h*w+c] = (byte) (tile.band(c).get(w, h));
-      //     }
-      //   }
-      // }
 
-      ByteBuffer data = ByteBuffer.wrap(imageDataArray);
+      // Option b: all channels, by height then width
+      // Problem: BEST MATCH label is the same, but percentage is different (same as above)
+      for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+          for (int c = 0; c < channels; c++) {
+            byteArray[h*(width*channels) + w*channels + c] = (byte) (tile.band(c).get(w, h));
+          }
+        }
+      }
+
+      ByteBuffer data = ByteBuffer.wrap(byteArray);
       Tensor imageTensor = Tensor.create(dataType, shape, data);
       System.out.println(imageTensor.dataType());
       // DataType.UINT8
       return imageTensor;
-
-      // MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
-      // int height = tile.rows();
-      // int width = tile.cols();
-      // int channels = tile.bandCount();
-      // int[][][] imageDataArray = new int[height][width][channels];
-      // for (int h = 0; h < height; h++) {
-      //   for (int w = 0; w < width; w++) {
-      //     for (int c = 0; c < channels; c++) {
-      //       imageDataArray[h][w][c] = tile.band(c).get(w, h);
-      //     }
-      //   }
-      // }
-      // int bandSize = (int) (height * width);
-      // byte[] byteArray = new byte[bandSize * (int) channels];
-      //
-      // for (int i = 0; i < channels; i++) {
-      //   // System.out.println(tile.band(i).toBytes().length);
-      //   System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize);
-      // }
-
-      // System.arraycopy(b, 0, c, aLen, bandSize);
-      // byte[] byteArray = System.arraycopy().addAll(tile.band(0), tile.band(1), tile.band(2));
-      // ByteBuffer data = ByteBuffer.wrap(byteArray);
-      // Tensor imageTensor = Tensor.create(dataType, shape, data);
     }
 
     Output constant(String name, Object value) {
