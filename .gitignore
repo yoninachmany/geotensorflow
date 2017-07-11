@@ -29,3 +29,5 @@ _SUCCESS
 *.sublime-*
 .vagrant
 *.class
+sample.tif
+inception5h/
