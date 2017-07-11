@@ -209,6 +209,8 @@ public class LabelImage {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
       MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
 
+      // Approach 1: Tensor.create(Object o)
+      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
       int height = tile.rows();
       int width = tile.cols();
       int channels = tile.bandCount();
@@ -223,6 +225,63 @@ public class LabelImage {
       }
 
       Tensor imageTensor = Tensor.create(imageDataArray);
+      System.out.println(imageTensor.dataType());
+      // DataType.INT32 - should be is DataType.UINT8
+      // dataTypeOf(Object o) -> int instances dtypes are DataType.INT32
+      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
+      return imageTensor;
+    }
+
+    Tensor decodeTiffBytes(String imagePathString) {
+      // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
+      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
+
+      // Approach 2: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
+      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(org.tensorflow.DataType, long[], java.nio.ByteBuffer)
+      DataType dataType = DataType.UINT8;
+      int height = tile.rows();
+      int width = tile.cols();
+      int channels = tile.bandCount();
+      long[] shape = {(long) height, (long) width, (long) channels};
+      byte[] imageDataArray = new byte[height * width * channels];
+      // What is the order of bytes?
+      // Option 1: all R, all G, all B
+      // Option 2: R, G, B, height, width, channels
+      for (int i = 0; i < imageDataArray.length; i++) {
+        int byteIndex = imageDataArray.length/channels;
+        int c = i % channels;
+        Tile t = tile.band(c);
+        System.out.println(t);
+        imageDataArray[i] = t.toBytes[byteIndex];
+      }
+      // System.out.println(imageDataArray.length);
+      // int h = 0;
+      // int w = 0;
+      // for (int i = 0; i < imageDataArray.length; i++) {
+      //   int c = i % channels;
+      //   if (i % channels == 0) {
+      //     w++;
+      //   }
+      //   if (i % channels * width == 0) {
+      //     h++;
+      //   }
+      //   Tile t = tile.band(c);
+      //   int pre = t.get(w, h);
+      //   System.out.println(pre);
+      //   imageDataArray[i] = (byte) (pre);
+      // }
+      // for (int h = 0; h < height; h++) {
+      //   for (int w = 0; w < width; w++) {
+      //     for (int c = 0; c < channels; c++) {
+      //       imageDataArray[h*w*c+h*w+c] = (byte) (tile.band(c).get(w, h));
+      //     }
+      //   }
+      // }
+
+      ByteBuffer data = ByteBuffer.wrap(imageDataArray);
+      Tensor imageTensor = Tensor.create(dataType, shape, data);
+      System.out.println(imageTensor.dataType());
+      // DataType.UINT8
       return imageTensor;
     }
 
