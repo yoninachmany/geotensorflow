@@ -34,6 +34,7 @@ import org.tensorflow.Shape;
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
 import geotrellis.raster.io.geotiff.*;
 import geotrellis.raster.MultibandTile;
+import geotrellis.raster.Tile;
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 public class LabelImage {
@@ -99,6 +100,7 @@ public class LabelImage {
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
       Tensor imageTensor = b.decodeTiff(imagePathString);
+
       final Output input = b.constantTensor("input", imageTensor);
       final Output output =
           b.div(
@@ -139,6 +141,7 @@ public class LabelImage {
     for (int i = 1; i < probabilities.length; ++i) {
       if (probabilities[i] > probabilities[best]) {
         best = i;
+        System.out.println(probabilities[best]);
       }
     }
     return best;
@@ -207,27 +210,28 @@ public class LabelImage {
      */
     Tensor decodeTiff(String imagePathString) {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
 
       // Approach 1: Tensor.create(Object o)
       // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
+      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
       int height = tile.rows();
       int width = tile.cols();
       int channels = tile.bandCount();
+      long[] shape = {(long) height, (long) width, (long) channels};
 
-      int[][][] imageDataArray = new int[height][width][channels];
+      byte[] byteArray = new byte[(int) (height * width * channels)];
       for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
           for (int c = 0; c < channels; c++) {
-            imageDataArray[h][w][c] = tile.band(c).get(w, h);
+            byteArray[h*w*c + w*c + c] = (byte) (tile.band(c).get(w, h));
           }
         }
       }
 
       Tensor imageTensor = Tensor.create(imageDataArray);
       System.out.println(imageTensor.dataType());
-      // DataType.INT32 - should be is DataType.UINT8
-      // dataTypeOf(Object o) -> int instances dtypes are DataType.INT32
+      // Problem: DataType.INT32 - should be is DataType.UINT8
+      // Reason: dataTypeOf(Object o) -> int instances dtypes are DataType.INT32
       // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
       return imageTensor;
     }
@@ -283,6 +287,31 @@ public class LabelImage {
       System.out.println(imageTensor.dataType());
       // DataType.UINT8
       return imageTensor;
+
+      // MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
+      // int height = tile.rows();
+      // int width = tile.cols();
+      // int channels = tile.bandCount();
+      // int[][][] imageDataArray = new int[height][width][channels];
+      // for (int h = 0; h < height; h++) {
+      //   for (int w = 0; w < width; w++) {
+      //     for (int c = 0; c < channels; c++) {
+      //       imageDataArray[h][w][c] = tile.band(c).get(w, h);
+      //     }
+      //   }
+      // }
+      // int bandSize = (int) (height * width);
+      // byte[] byteArray = new byte[bandSize * (int) channels];
+      //
+      // for (int i = 0; i < channels; i++) {
+      //   // System.out.println(tile.band(i).toBytes().length);
+      //   System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize);
+      // }
+
+      // System.arraycopy(b, 0, c, aLen, bandSize);
+      // byte[] byteArray = System.arraycopy().addAll(tile.band(0), tile.band(1), tile.band(2));
+      // ByteBuffer data = ByteBuffer.wrap(byteArray);
+      // Tensor imageTensor = Tensor.create(dataType, shape, data);
     }
 
     Output constant(String name, Object value) {
