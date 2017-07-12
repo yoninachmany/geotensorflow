@@ -24,6 +24,6 @@ run inception5h sample.tif
 ```
 
 ### Results:
-![Sample image](sample.png)
+![SpaceNet image](spacenet.png)
 
 BEST MATCH: fountain (8.91% likely)

@@ -29,6 +29,6 @@ _SUCCESS
 *.sublime-*
 .vagrant
 *.class
-sample.tif
 inception5h/
-sample.png
+spacenet.tif
+spacenet.png
