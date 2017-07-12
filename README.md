@@ -30,7 +30,7 @@ run inception5h sample.tif
 BEST MATCH: fountain (8.91% likely)
 
 ##### Example jpg
-![Example jpg](xample-400x288.jpg)
+![Example jpg](example-400x288.jpg)
 
 (original jpg code and image) BEST MATCH: lakeside (19.00% likely)
 (modified tif code and image) BEST MATCH: lakeside (18.52% likely)
