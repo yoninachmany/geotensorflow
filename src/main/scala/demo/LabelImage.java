@@ -99,7 +99,7 @@ public class LabelImage {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      Tensor imageTensor = b.decodeTiffBytes(imagePathString);
+      Tensor imageTensor = b.decodeTiff(imagePathString);
 
       final Output input = b.constantTensor("input", imageTensor);
       final Output output =
@@ -210,36 +210,35 @@ public class LabelImage {
      */
     Tensor decodeTiff(String imagePathString) {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-
-      // Approach 1: Tensor.create(Object o)
-      // Problem: BEST MATCH label is the same, but percentage is different
-      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
-      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
-      int height = tile.rows();
-      int width = tile.cols();
-      int channels = tile.bandCount();
-      int[][][] int3DArray = new int[height][width][channels];
-      for (int h = 0; h < height; h++) {
-        for (int w = 0; w < width; w++) {
-          for (int c = 0; c < channels; c++) {
-            int3DArray[h][w][c] = tile.band(c).get(w, h);
-          }
-        }
-      }
-
-      Tensor imageTensor = Tensor.create(int3DArray);
-      System.out.println(imageTensor.dataType());
-      // Observation: DataType.INT32 - should be is DataType.UINT8
-      // Reason: dataTypeOf(Object o) -> int instances dtypes are DataType.INT32
-      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
-      return imageTensor;
-    }
-
-    Tensor decodeTiffBytes(String imagePathString) {
-      // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
       MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
 
-      // Approach 2: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
+      // // Testing documentation:
+      // // https://github.com/loretoparisi/tensorflow-java
+      // // example-400x288.jpg -> BEST MATCH: lakeside (19.00% likely)
+      //
+      // // Original Approach: Tensor.create(Object o)
+      // // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
+      // // example-400x288.jpg.tif -> BEST MATCH: lakeside (18.52% likely)
+      // int height = tile.rows();
+      // int width = tile.cols();
+      // int channels = tile.bandCount();
+      // int[][][] int3DArray = new int[height][width][channels];
+      // for (int h = 0; h < height; h++) {
+      //   for (int w = 0; w < width; w++) {
+      //     for (int c = 0; c < channels; c++) {
+      //       int3DArray[h][w][c] = tile.band(c).get(w, h);
+      //     }
+      //   }
+      // }
+      //
+      // Tensor imageTensor = Tensor.create(int3DArray);
+      // // System.out.println(imageTensor.dataType()); // decodeJpeg returns uint8 tensor
+      // // DataType.INT32
+      // // Reason: dataTypeOf(Object o) -> int instances -> DataType.INT32
+      // // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
+      // return imageTensor;
+
+      // Only other Approach: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
       // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(org.tensorflow.DataType, long[], java.nio.ByteBuffer)
       DataType dataType = DataType.UINT8;
       int height = tile.rows();
@@ -247,16 +246,17 @@ public class LabelImage {
       int channels = tile.bandCount();
       long[] shape = {(long) height, (long) width, (long) channels};
       byte[] byteArray = new byte[height * width * channels];
-      // What is the order of bytes?
-      // Option a: all R, all G, all B
-      // Problem: BEST MATCH: toilet seat (25.78% likely)
-      int bandSize = height * width;
-      for (int i = 0; i < channels; i++) {
-        System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize);
-      }
 
-      // Option b: all channels, by height then width
-      // Problem: BEST MATCH label is the same, but percentage is different (same as above)
+      // How should byteArray be populated?
+      // Intentionally wrong: non-interleaved, i.e. all R, all G, all B
+      // BEST MATCH: handkerchief (52.15% likely)
+      // int bandSize = height * width;
+      // for (int i = 0; i < channels; i++) {
+      //   System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize);
+      // }
+
+      // Hopefully right: interleaved R, G, B, by height then width
+      // BEST MATCH: lakeside (18.52% likely)
       for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
           for (int c = 0; c < channels; c++) {
@@ -267,7 +267,7 @@ public class LabelImage {
 
       ByteBuffer data = ByteBuffer.wrap(byteArray);
       Tensor imageTensor = Tensor.create(dataType, shape, data);
-      System.out.println(imageTensor.dataType());
+      // System.out.println(imageTensor.dataType()); // decodeJpeg returns uint8 tensor
       // DataType.UINT8
       return imageTensor;
     }
