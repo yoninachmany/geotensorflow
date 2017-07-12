@@ -212,13 +212,13 @@ public class LabelImage {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
       MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
 
-      // // Testing documentation:
-      // // https://github.com/loretoparisi/tensorflow-java
-      // // example-400x288.jpg -> BEST MATCH: lakeside (19.00% likely)
-      //
-      // // Original Approach: Tensor.create(Object o)
-      // // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
-      // // example-400x288.jpg.tif -> BEST MATCH: lakeside (18.52% likely)
+      // Testing documentation:
+      // https://github.com/loretoparisi/tensorflow-java
+      // example-400x288.jpg -> BEST MATCH: lakeside (19.00% likely)
+
+      // Original Approach: Tensor.create(Object o)
+      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
+      // example-400x288.jpg.tif -> BEST MATCH: lakeside (18.52% likely)
       // int height = tile.rows();
       // int width = tile.cols();
       // int channels = tile.bandCount();
@@ -232,10 +232,10 @@ public class LabelImage {
       // }
       //
       // Tensor imageTensor = Tensor.create(int3DArray);
-      // // System.out.println(imageTensor.dataType()); // decodeJpeg returns uint8 tensor
-      // // DataType.INT32
-      // // Reason: dataTypeOf(Object o) -> int instances -> DataType.INT32
-      // // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
+      // System.out.println(imageTensor.dataType()); // decodeJpeg returns uint8 tensor
+      // DataType.INT32
+      // Reason: dataTypeOf(Object o) -> int instances -> DataType.INT32
+      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
       // return imageTensor;
 
       // Only other Approach: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
