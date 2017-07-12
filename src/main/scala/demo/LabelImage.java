@@ -141,7 +141,6 @@ public class LabelImage {
     for (int i = 1; i < probabilities.length; ++i) {
       if (probabilities[i] > probabilities[best]) {
         best = i;
-        System.out.println(probabilities[best]);
       }
     }
     return best;
