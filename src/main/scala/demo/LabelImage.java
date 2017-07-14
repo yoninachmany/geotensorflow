@@ -63,13 +63,16 @@ public class LabelImage {
     String imageFile = args[1];
 
     long startTime = System.currentTimeMillis();
-    byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
+    byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"));
+    // byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
     List<String> labels =
-        readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
+        // readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
+        readAllLinesOrExit(Paths.get(modelDir, "labels.txt"));
+    byte[] imageBytes = readAllBytesOrExit(Paths.get(imageFile));
+    // String imagePathString = Paths.get(imageFile).toString();
 
-    String imagePathString = Paths.get(imageFile).toString();
-
-    try (Tensor image = constructAndExecuteGraphToNormalizeImage(imagePathString)) {
+    try (Tensor image = constructAndExecuteGraphToNormalizeImage(imageBytes)) {
+    // try (Tensor image = constructAndExecuteGraphToNormalizeImage(imagePathString)) {
       float[] labelProbabilities = executeInceptionGraph(graphDef, image);
       int bestLabelIdx = maxIndex(labelProbabilities);
       System.out.println(
@@ -82,7 +85,8 @@ public class LabelImage {
     System.out.println(elapsedTime);
   }
 
-  private static Tensor constructAndExecuteGraphToNormalizeImage(String imagePathString) {
+  private static Tensor constructAndExecuteGraphToNormalizeImage(byte[] imageBytes) {
+  // private static Tensor constructAndExecuteGraphToNormalizeImage(String imagePathString) {
     try (Graph g = new Graph()) {
       GraphBuilder b = new GraphBuilder(g);
       // Some constants specific to the pre-trained model at:
@@ -99,15 +103,17 @@ public class LabelImage {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      Tensor imageTensor = b.decodeTiff(imagePathString);
+      final Output input = b.constant("input", imageBytes);
+      // Tensor imageTensor = b.decodeTiff(imagePathString);
+      // final Output input = b.constantTensor("input", imageTensor);
 
-      final Output input = b.constantTensor("input", imageTensor);
       final Output output =
           b.div(
               b.sub(
                   b.resizeBilinear(
                       b.expandDims(
-                          b.cast(input, DataType.FLOAT),
+                          b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+                          // b.cast(input, DataType.FLOAT),
                           b.constant("make_batch", 0)),
                       b.constant("size", new int[] {H, W})),
                   b.constant("mean", mean)),
@@ -122,7 +128,7 @@ public class LabelImage {
     try (Graph g = new Graph()) {
       g.importGraphDef(graphDef);
       try (Session s = new Session(g);
-          Tensor result = s.runner().feed("input", image).fetch("output").run().get(0)) {
+          Tensor result = s.runner().feed("input_1", image).fetch("dense/Sigmoid").run().get(0)) {
         final long[] rshape = result.shape();
         if (result.numDimensions() != 2 || rshape[0] != 1) {
           throw new RuntimeException(
