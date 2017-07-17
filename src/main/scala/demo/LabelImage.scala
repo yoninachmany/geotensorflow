@@ -140,8 +140,6 @@ object LabelImage {
       // TODO: final
       val input: Output = b.constantTensor("input", imageTensor)
 
-      println(imageTensor)
-
       // TODO: final?
       val output: Output =
         b.div(
