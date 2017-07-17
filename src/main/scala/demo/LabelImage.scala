@@ -35,6 +35,9 @@ import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
 import geotrellis.raster.io.geotiff._;
 import geotrellis.raster.MultibandTile;
 import geotrellis.raster.Tile;
+import spray.json._
+import DefaultJsonProtocol._
+import spray.json.JsonFormat
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
@@ -68,29 +71,49 @@ object LabelImage {
     val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"));
     // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
     val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"));
-    val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile));
-    // val imagePathString: String = Paths.get(imageFile).toString();
+    // val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile));
+    val imagePathString: String = Paths.get(imageFile).toString();
 
-    var image: Tensor = null;
+    var image: Tensor = constructAndExecuteGraphToNormalizeImage(imagePathString);
     try {
-      image = constructAndExecuteGraphToNormalizeImage(imageBytes);
+      // image = constructAndExecuteGraphToNormalizeImage(imageBytes);
       // image = constructAndExecuteGraphToNormalizeImage(imagePathString);
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image);
-      val bestLabelIdx: Int = maxIndex(labelProbabilities);
-      val bestLabel: String = labels.get(bestLabelIdx)
-      val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f;
-      println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)");
+      val stopTime: Long = System.currentTimeMillis();
+      val elapsedTime: Long = stopTime - startTime;
+      println(elapsedTime);
+
+      // for each label, if likelihood > threshold, print label,
+      // val stream = new FileInputStream(file)
+      // val json = try {  Json.parse(stream) } finally { stream.close() }
+      //
+      //
+      val thresholdsPath: String = "thresholds.json"
+      val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
+      val lines: String = try source.mkString finally source.close()
+      val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
+      var i: Int = 0;
+      for (i <- 0 to labels.size()-1) {
+        val labelProbability: Float = labelProbabilities(i) * 100f;
+        val threshold: Float = thresholds(i) * 100f;
+        val label: String = labels.get(i)
+        if (labelProbability >= threshold) {
+          println(f"MATCH: $label%-20s $labelProbability%15.2f%% likely $threshold%15.2f%% threshold");
+        }
+      }
+
+      // val bestLabelIdx: Int = maxIndex(labelProbabilities);
+      // val bestLabel: String = labels.get(bestLabelIdx)
+      // val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f;
+      // println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)");
     } finally {
       image.close();
     }
-    val stopTime: Long = System.currentTimeMillis();
-    val elapsedTime: Long = stopTime - startTime;
-    println(elapsedTime);
   }
 
   private def constructAndExecuteGraphToNormalizeImage = true
-  def constructAndExecuteGraphToNormalizeImage(imageBytes: Array[Byte]): Tensor = {
-  // def constructAndExecuteGraphToNormalizeImage(imagePathString: String): Tensor = {
+  // def constructAndExecuteGraphToNormalizeImage(imageBytes: Array[Byte]): Tensor = {
+  def constructAndExecuteGraphToNormalizeImage(imagePathString: String): Tensor = {
     var g: Graph = null;
 
     try {
@@ -106,28 +129,30 @@ object LabelImage {
       // TODO: final?
       val H: Int = 224;
       val W: Int = 224;
-      val mean: Float = 117f;
-      val scale: Float = 1f;
+      val mean: Float = 80f;
+      val scale: Float = 40f;
 
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
       // // TODO: final?
-      val input: Output = b.constant("input", imageBytes);
-      // val imageTensor: Tensor = b.decodeTiff(imagePathString);
+      // val input: Output = b.constant("input", imageBytes);
+      val imageTensor: Tensor = b.decodeTiff(imagePathString);
       // TODO: final
-      // val input: Output = b.constantTensor("input", imageTensor);
+      val input: Output = b.constantTensor("input", imageTensor);
+
+      println(imageTensor)
 
       // TODO: final?
       val output: Output =
           b.div(
               b.sub(
-                  b.resizeBilinear(
+                  // b.resizeBilinear(
                       b.expandDims(
-                          b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
-                          // b.cast(input, DataType.FLOAT),
+                          // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+                          b.cast(input, DataType.FLOAT),
                           b.constant("make_batch", 0)),
-                      b.constant("size", Array[Int](H, W))),
+                      // b.constant("size", Array[Int](H, W))),
                   b.constant("mean", mean)),
               b.constant("scale", scale));
       var s: Session = null;
@@ -171,17 +196,17 @@ object LabelImage {
     }
   }
 
-  private def maxIndex = true
-  def maxIndex(probabilities: Array[Float]): Int = {
-    var best: Int = 0;
-    val i: Int = 1;
-    for (i <- 1 to probabilities.length-1) {
-      if (probabilities(i) > probabilities(best)) {
-        best = i;
-      }
-    }
-    return best;
-  }
+  // private def maxIndex = true
+  // def maxIndex(probabilities: Array[Float]): Int = {
+  //   var best: Int = 0;
+  //   val i: Int = 1;
+  //   for (i <- 1 to probabilities.length-1) {
+  //     if (probabilities(i) > probabilities(best)) {
+  //       best = i;
+  //     }
+  //   }
+  //   return best;
+  // }
 
   private def readAllBytesOrExit = true
   def readAllBytesOrExit(path: Path) : Array[Byte] = {
@@ -298,9 +323,9 @@ object LabelImage {
       var h: Int = 0;
       var w: Int = 0;
       var c: Int = 0;
-      for (h <- 0 to height) {
-        for (w <- 0 to width) {
-          for (c <- 0 to channels) {
+      for (h <- 0 to height-1) {
+        for (w <- 0 to width-1) {
+          for (c <- 0 to channels-1) {
             byteArray(h*(width*channels) + w*channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte];
           }
         }
