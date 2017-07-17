@@ -37,7 +37,6 @@ import geotrellis.raster.MultibandTile
 import geotrellis.raster.Tile
 import spray.json._
 import DefaultJsonProtocol._
-import spray.json.JsonFormat
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
