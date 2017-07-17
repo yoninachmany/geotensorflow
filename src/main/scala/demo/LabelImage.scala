@@ -43,9 +43,9 @@ object LabelImage {
   def printUsage(s: PrintStream) {
     // TODO: final?
     val url: String =
-        "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip"
+      "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip"
     s.println(
-        "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)")
+      "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)")
     s.println("to label Tiff images.")
     s.println("TensorFlow version: " + TensorFlow.version())
     s.println()
@@ -62,7 +62,7 @@ object LabelImage {
       printUsage(System.err)
       System.exit(1)
     }
-    val modelDir: String = "/Users/yoninachmany/azavea/raster-vision-notebooks/"//args(0)
+    val modelDir: String = "/Users/yoninachmany/azavea/raster-vision-notebooks/" //args(0)
     val imageFile: String = args(1)
 
     val startTime: Long = System.currentTimeMillis()
@@ -92,7 +92,7 @@ object LabelImage {
       val lines: String = try source.mkString finally source.close()
       val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
       var i: Int = 0
-      for (i <- 0 to labels.size()-1) {
+      for (i <- 0 to labels.size() - 1) {
         val labelProbability: Float = labelProbabilities(i) * 100f
         val threshold: Float = thresholds(i) * 100f
         val label: String = labels.get(i)
@@ -144,16 +144,16 @@ object LabelImage {
 
       // TODO: final?
       val output: Output =
-          b.div(
-              b.sub(
-                  // b.resizeBilinear(
-                      b.expandDims(
-                          // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
-                          b.cast(input, DataType.FLOAT),
-                          b.constant("make_batch", 0)),
-                      // b.constant("size", Array[Int](H, W))),
-                  b.constant("mean", mean)),
-              b.constant("scale", scale))
+        b.div(
+          b.sub(
+            // b.resizeBilinear(
+            b.expandDims(
+              // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+              b.cast(input, DataType.FLOAT),
+              b.constant("make_batch", 0)),
+            // b.constant("size", Array[Int](H, W))),
+            b.constant("mean", mean)),
+          b.constant("scale", scale))
       var s: Session = null
       try {
         s = new Session(g)
@@ -182,8 +182,8 @@ object LabelImage {
         val rshapeString: String = Arrays.toString(rshape)
         if (result.numDimensions != 2 || rshape(0) != 1) {
           throw new RuntimeException(
-              String.format(
-                  f"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape $rshapeString%s"))
+            String.format(
+              f"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape $rshapeString%s"))
         }
         val nlabels: Int = rshape(1).asInstanceOf[Int]
         return result.copyTo(Array.ofDim[Float](1, nlabels))(0)
@@ -208,7 +208,7 @@ object LabelImage {
   // }
 
   private def readAllBytesOrExit = true
-  def readAllBytesOrExit(path: Path) : Array[Byte] = {
+  def readAllBytesOrExit(path: Path): Array[Byte] = {
     try {
       return Files.readAllBytes(path)
     } catch {
@@ -221,7 +221,7 @@ object LabelImage {
   }
 
   private def readAllLinesOrExit = true
-  def readAllLinesOrExit(path: Path) : List[String] = {
+  def readAllLinesOrExit(path: Path): List[String] = {
     try {
       return Files.readAllLines(path, Charset.forName("UTF-8"))
     } catch {
@@ -259,10 +259,10 @@ object LabelImage {
 
     def decodeJpeg(contents: Output, channels: Long): Output = {
       return g.opBuilder("DecodeJpeg", "DecodeJpeg")
-          .addInput(contents)
-          .setAttr("channels", channels)
-          .build()
-          .output(0)
+        .addInput(contents)
+        .setAttr("channels", channels)
+        .build()
+        .output(0)
     }
 
     /**
@@ -322,10 +322,10 @@ object LabelImage {
       var h: Int = 0
       var w: Int = 0
       var c: Int = 0
-      for (h <- 0 to height-1) {
-        for (w <- 0 to width-1) {
-          for (c <- 0 to channels-1) {
-            byteArray(h*(width*channels) + w*channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
+      for (h <- 0 to height - 1) {
+        for (w <- 0 to width - 1) {
+          for (c <- 0 to channels - 1) {
+            byteArray(h * (width * channels) + w * channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
           }
         }
       }
@@ -340,20 +340,20 @@ object LabelImage {
     def constant(name: String, value: Any): Output = {
       val t: Tensor = Tensor.create(value)
       val o: Output = g.opBuilder("Const", name)
-          .setAttr("dtype", t.dataType())
-          .setAttr("value", t)
-          .build()
-          .output(0)
+        .setAttr("dtype", t.dataType())
+        .setAttr("value", t)
+        .build()
+        .output(0)
       t.close()
       return o
     }
 
     def constantTensor(name: String, t: Tensor): Output = {
       return g.opBuilder("Const", name)
-          .setAttr("dtype", t.dataType())
-          .setAttr("value", t)
-          .build()
-          .output(0)
+        .setAttr("dtype", t.dataType())
+        .setAttr("value", t)
+        .build()
+        .output(0)
     }
 
     private def binaryOp = true
