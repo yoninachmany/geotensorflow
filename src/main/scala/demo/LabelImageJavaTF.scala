@@ -32,14 +32,15 @@ import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlow;
 import org.tensorflow.Shape;
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader;
-import geotrellis.raster.io.geotiff.*;
+import geotrellis.raster.io.geotiff._;
 import geotrellis.raster.MultibandTile;
 import geotrellis.raster.Tile;
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
-public class LabelImage {
-  private static void printUsage(PrintStream s) {
-    final String url =
+object LabelImage {
+  def printUsage(s: PrintStream) {
+    // TODO: final?
+    val url: String =
         "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip";
     s.println(
         "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)");
@@ -54,60 +55,71 @@ public class LabelImage {
     s.println("<image file> is the path to a JPEG image file");
   }
 
-  public static void main(String[] args) {
+  def main(args: Array[String]) {
     if (args.length != 2) {
       printUsage(System.err);
       System.exit(1);
     }
-    String modelDir = args[0];
-    String imageFile = args[1];
+    val modelDir: String = "/Users/yoninachmany/azavea/raster-vision-notebooks/";//args(0);
+    val imageFile: String = args(1);
 
-    long startTime = System.currentTimeMillis();
-    byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"));
-    // byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
-    List<String> labels =
-        // readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
-        readAllLinesOrExit(Paths.get(modelDir, "labels.txt"));
-    byte[] imageBytes = readAllBytesOrExit(Paths.get(imageFile));
-    // String imagePathString = Paths.get(imageFile).toString();
+    val startTime: Long = System.currentTimeMillis();
+    // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
+    val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"));
+    // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
+    val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"));
+    val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile));
+    // val imagePathString: String = Paths.get(imageFile).toString();
 
-    try (Tensor image = constructAndExecuteGraphToNormalizeImage(imageBytes)) {
-    // try (Tensor image = constructAndExecuteGraphToNormalizeImage(imagePathString)) {
-      float[] labelProbabilities = executeInceptionGraph(graphDef, image);
-      int bestLabelIdx = maxIndex(labelProbabilities);
-      System.out.println(
-          String.format(
-              "BEST MATCH: %s (%.2f%% likely)",
-              labels.get(bestLabelIdx), labelProbabilities[bestLabelIdx] * 100f));
+    var image: Tensor = null;
+    try {
+      image = constructAndExecuteGraphToNormalizeImage(imageBytes);
+      // image = constructAndExecuteGraphToNormalizeImage(imagePathString);
+      val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image);
+      val bestLabelIdx: Int = maxIndex(labelProbabilities);
+      val bestLabel: String = labels.get(bestLabelIdx)
+      val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f;
+      println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)");
+    } finally {
+      image.close();
     }
-    long stopTime = System.currentTimeMillis();
-    long elapsedTime = stopTime - startTime;
-    System.out.println(elapsedTime);
+    val stopTime: Long = System.currentTimeMillis();
+    val elapsedTime: Long = stopTime - startTime;
+    println(elapsedTime);
   }
 
-  private static Tensor constructAndExecuteGraphToNormalizeImage(byte[] imageBytes) {
-  // private static Tensor constructAndExecuteGraphToNormalizeImage(String imagePathString) {
-    try (Graph g = new Graph()) {
-      GraphBuilder b = new GraphBuilder(g);
+  private def constructAndExecuteGraphToNormalizeImage = true
+  def constructAndExecuteGraphToNormalizeImage(imageBytes: Array[Byte]): Tensor = {
+  // def constructAndExecuteGraphToNormalizeImage(imagePathString: String): Tensor = {
+    var g: Graph = null;
+
+    try {
+      g = new Graph();
+      // TODO: does GraphBuilder.g need to be closed?
+      val b: GraphBuilder = new GraphBuilder(g);
       // Some constants specific to the pre-trained model at:
       // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
       //
       // - The model was trained with images scaled to 224x224 pixels.
       // - The colors, represented as R, G, B in 1-byte each were converted to
       //   float using (value - Mean)/Scale.
-      final int H = 224;
-      final int W = 224;
-      final float mean = 117f;
-      final float scale = 1f;
+      // TODO: final?
+      val H: Int = 224;
+      val W: Int = 224;
+      val mean: Float = 117f;
+      val scale: Float = 1f;
 
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      final Output input = b.constant("input", imageBytes);
-      // Tensor imageTensor = b.decodeTiff(imagePathString);
-      // final Output input = b.constantTensor("input", imageTensor);
+      // // TODO: final?
+      val input: Output = b.constant("input", imageBytes);
+      // val imageTensor: Tensor = b.decodeTiff(imagePathString);
+      // TODO: final
+      // val input: Output = b.constantTensor("input", imageTensor);
 
-      final Output output =
+      // TODO: final?
+      val output: Output =
           b.div(
               b.sub(
                   b.resizeBilinear(
@@ -115,59 +127,84 @@ public class LabelImage {
                           b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
                           // b.cast(input, DataType.FLOAT),
                           b.constant("make_batch", 0)),
-                      b.constant("size", new int[] {H, W})),
+                      b.constant("size", Array[Int](H, W))),
                   b.constant("mean", mean)),
               b.constant("scale", scale));
-      try (Session s = new Session(g)) {
+      var s: Session = null;
+      try {
+        s = new Session(g);
         return s.runner().fetch(output.op().name()).run().get(0);
+      } finally {
+        s.close();
       }
+    } finally {
+      g.close();
     }
   }
 
-  private static float[] executeInceptionGraph(byte[] graphDef, Tensor image) {
-    try (Graph g = new Graph()) {
+  private def executeInceptionGraph = true
+  def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
+    var g: Graph = null;
+    try {
+      g = new Graph();
       g.importGraphDef(graphDef);
-      try (Session s = new Session(g);
-          Tensor result = s.runner().feed("input_1", image).fetch("dense/Sigmoid").run().get(0)) {
-        final long[] rshape = result.shape();
-        if (result.numDimensions() != 2 || rshape[0] != 1) {
+      var s: Session = null;
+      var result: Tensor = null;
+      try {
+        s = new Session(g);
+        result = s.runner().feed("input_1", image).fetch("dense/Sigmoid").run().get(0);
+        // TODO: final?
+        val rshape: Array[Long] = result.shape;
+        val rshapeString: String = Arrays.toString(rshape);
+        if (result.numDimensions != 2 || rshape(0) != 1) {
           throw new RuntimeException(
               String.format(
-                  "Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape %s",
-                  Arrays.toString(rshape)));
+                  f"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape $rshapeString%s"));
         }
-        int nlabels = (int) rshape[1];
-        return result.copyTo(new float[1][nlabels])[0];
+        val nlabels: Int = rshape(1).asInstanceOf[Int];
+        return result.copyTo(Array.ofDim[Float](1, nlabels))(0);
+      } finally {
+        s.close();
       }
+    } finally {
+      g.close();
     }
   }
 
-  private static int maxIndex(float[] probabilities) {
-    int best = 0;
-    for (int i = 1; i < probabilities.length; ++i) {
-      if (probabilities[i] > probabilities[best]) {
+  private def maxIndex = true
+  def maxIndex(probabilities: Array[Float]): Int = {
+    var best: Int = 0;
+    val i: Int = 1;
+    for (i <- 1 to probabilities.length-1) {
+      if (probabilities(i) > probabilities(best)) {
         best = i;
       }
     }
     return best;
   }
 
-  private static byte[] readAllBytesOrExit(Path path) {
+  private def readAllBytesOrExit = true
+  def readAllBytesOrExit(path: Path) : Array[Byte] = {
     try {
       return Files.readAllBytes(path);
-    } catch (IOException e) {
-      System.err.println("Failed to read [" + path + "]: " + e.getMessage());
-      System.exit(1);
+    } catch {
+      case e: IOException => {
+        System.err.println("Failed to read [" + path + "]: " + e.getMessage());
+        System.exit(1);
+      }
     }
     return null;
   }
 
-  private static List<String> readAllLinesOrExit(Path path) {
+  private def readAllLinesOrExit = true
+  def readAllLinesOrExit(path: Path) : List[String] = {
     try {
       return Files.readAllLines(path, Charset.forName("UTF-8"));
-    } catch (IOException e) {
-      System.err.println("Failed to read [" + path + "]: " + e.getMessage());
-      System.exit(0);
+    } catch {
+      case e: IOException => {
+        System.err.println("Failed to read [" + path + "]: " + e.getMessage());
+        System.exit(0);
+      }
     }
     return null;
   }
@@ -175,32 +212,28 @@ public class LabelImage {
   // In the fullness of time, equivalents of the methods of this class should be auto-generated from
   // the OpDefs linked into libtensorflow_jni.so. That would match what is done in other languages
   // like Python, C++ and Go.
-  static class GraphBuilder {
-    GraphBuilder(Graph g) {
-      this.g = g;
-    }
-
-    Output div(Output x, Output y) {
+  class GraphBuilder(g: Graph) {
+    def div(x: Output, y: Output): Output = {
       return binaryOp("Div", x, y);
     }
 
-    Output sub(Output x, Output y) {
+    def sub(x: Output, y: Output): Output = {
       return binaryOp("Sub", x, y);
     }
 
-    Output resizeBilinear(Output images, Output size) {
+    def resizeBilinear(images: Output, size: Output): Output = {
       return binaryOp("ResizeBilinear", images, size);
     }
 
-    Output expandDims(Output input, Output dim) {
+    def expandDims(input: Output, dim: Output): Output = {
       return binaryOp("ExpandDims", input, dim);
     }
 
-    Output cast(Output value, DataType dtype) {
+    def cast(value: Output, dtype: DataType): Output = {
       return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build().output(0);
     }
 
-    Output decodeJpeg(Output contents, long channels) {
+    def decodeJpeg(contents: Output, channels: Long): Output = {
       return g.opBuilder("DecodeJpeg", "DecodeJpeg")
           .addInput(contents)
           .setAttr("channels", channels)
@@ -213,9 +246,9 @@ public class LabelImage {
      * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
      * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
      */
-    Tensor decodeTiff(String imagePathString) {
+    def decodeTiff(imagePathString: String): Tensor = {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-      MultibandTile tile = GeoTiffReader.readMultiband(imagePathString).tile();
+      val tile: MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile;
 
       // Testing documentation:
       // https://github.com/loretoparisi/tensorflow-java
@@ -245,12 +278,12 @@ public class LabelImage {
 
       // Only other Approach: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
       // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(org.tensorflow.DataType, long[], java.nio.ByteBuffer)
-      DataType dataType = DataType.UINT8;
-      int height = tile.rows();
-      int width = tile.cols();
-      int channels = tile.bandCount();
-      long[] shape = {(long) height, (long) width, (long) channels};
-      byte[] byteArray = new byte[height * width * channels];
+      val dataType: DataType = DataType.UINT8;
+      val height: Int = tile.rows;
+      val width: Int = tile.cols;
+      val channels: Int = tile.bandCount;
+      val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long]);
+      val byteArray: Array[Byte] = new Array(height * width * channels);
 
       // How should byteArray be populated?
       // Intentionally wrong: non-interleaved, i.e. all R, all G, all B
@@ -262,32 +295,36 @@ public class LabelImage {
 
       // Hopefully right: interleaved R, G, B, by height then width
       // BEST MATCH: lakeside (18.52% likely)
-      for (int h = 0; h < height; h++) {
-        for (int w = 0; w < width; w++) {
-          for (int c = 0; c < channels; c++) {
-            byteArray[h*(width*channels) + w*channels + c] = (byte) (tile.band(c).get(w, h));
+      var h: Int = 0;
+      var w: Int = 0;
+      var c: Int = 0;
+      for (h <- 0 to height) {
+        for (w <- 0 to width) {
+          for (c <- 0 to channels) {
+            byteArray(h*(width*channels) + w*channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte];
           }
         }
       }
 
-      ByteBuffer data = ByteBuffer.wrap(byteArray);
-      Tensor imageTensor = Tensor.create(dataType, shape, data);
+      val data: ByteBuffer = ByteBuffer.wrap(byteArray);
+      val imageTensor: Tensor = Tensor.create(dataType, shape, data);
       // System.out.println(imageTensor.dataType()); // decodeJpeg returns uint8 tensor
       // DataType.UINT8
       return imageTensor;
     }
 
-    Output constant(String name, Object value) {
-      try (Tensor t = Tensor.create(value)) {
-        return g.opBuilder("Const", name)
-            .setAttr("dtype", t.dataType())
-            .setAttr("value", t)
-            .build()
-            .output(0);
-      }
+    def constant(name: String, value: Any): Output = {
+      val t: Tensor = Tensor.create(value)
+      val o: Output = g.opBuilder("Const", name)
+          .setAttr("dtype", t.dataType())
+          .setAttr("value", t)
+          .build()
+          .output(0);
+      t.close();
+      return o;
     }
 
-    Output constantTensor(String name, Tensor t) {
+    def constantTensor(name: String, t: Tensor): Output = {
       return g.opBuilder("Const", name)
           .setAttr("dtype", t.dataType())
           .setAttr("value", t)
@@ -295,10 +332,9 @@ public class LabelImage {
           .output(0);
     }
 
-    private Output binaryOp(String type, Output in1, Output in2) {
-      return g.opBuilder(type, type).addInput(in1).addInput(in2).build().output(0);
+    private def binaryOp = true
+    def binaryOp(ty: String, in1: Output, in2: Output): Output = {
+      return g.opBuilder(ty, ty).addInput(in1).addInput(in2).build().output(0);
     }
-
-    private Graph g;
   }
 }
