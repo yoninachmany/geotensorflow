@@ -18,15 +18,24 @@ package demo
 import geotrellis.raster.{Tile, MultibandTile}
 import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
+import geotrellis.raster.io.geotiff._
+import geotrellis.proj4._
+import geotrellis.vector._
 import org.tensorflow.{DataType, Graph, Output, Session, Tensor, TensorFlow, Shape}
 import spray.json._
 import DefaultJsonProtocol._
+import com.twelvemonkeys.image.ResampleOp
+import com.twelvemonkeys.imageio.AbstractMetadata
+import com.twelvemonkeys.imageio.AbstractMetadata
+import spire.syntax.cfor._
 
 import java.io.{IOException, PrintStream}
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
+import java.awt.image._
+import javax.imageio.ImageIO
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
