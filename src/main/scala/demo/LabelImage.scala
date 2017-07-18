@@ -42,7 +42,6 @@ import java.util.List
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
   def printUsage(s: PrintStream) {
-    // TODO: final?
     val url: String =
       "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip"
     s.println(
@@ -122,7 +121,6 @@ object LabelImage {
 
     try {
       g = new Graph
-      // TODO: does GraphBuilder.g need to be closed?
       val b: GraphBuilder = new GraphBuilder(g)
       // Some constants specific to the pre-trained model at:
       // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
@@ -130,11 +128,10 @@ object LabelImage {
       // - The model was trained with images scaled to 224x224 pixels.
       // - The colors, represented as R, G, B in 1-byte each were converted to
       //   float using (value - Mean)/Scale.
-      // TODO: final?
       // val H: Int = 224
       // val W: Int = 224
-      val mean: Float = 117f
-      val scale: Float = 1f
+      // val mean: Float = 117f
+      // val scale: Float = 1f
       val statsPath: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/planet_kaggle_jpg_channel_stats.json"
       val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
       val lines: String = try source.mkString finally source.close
@@ -145,7 +142,6 @@ object LabelImage {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      // // TODO: final?
       // val input: Output = b.constant("input", imageBytes)
 
       var imageTensor: Tensor = null
@@ -154,7 +150,6 @@ object LabelImage {
       try {
         imageTensor = b.decodeTiff(imagePathString)
 
-        // TODO: final
         val input: Output = b.constantTensor("input", imageTensor)
 
         val shape: Array[Long] = imageTensor.shape
@@ -224,7 +219,6 @@ object LabelImage {
       try {
         s = new Session(g)
         result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
-        // TODO: final?
         val rshape: Array[Long] = result.shape
         val rshapeString: String = Arrays.toString(rshape)
         if (result.numDimensions != 2 || rshape(0) != 1) {
