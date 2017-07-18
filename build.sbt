@@ -27,10 +27,10 @@ pomIncludeRepository := { _ => false }
 resolvers += Resolver.bintrayRepo("azavea", "geotrellis")
 
 libraryDependencies ++= Seq(
-  "com.azavea.geotrellis" %% "geotrellis-spark" % "1.0.0-d9f051d",
-  "com.azavea.geotrellis" %% "geotrellis-raster"% "1.0.0-d9f051d",
+  "com.azavea.geotrellis" %% "geotrellis-spark" % "1.0.1",
+  "com.azavea.geotrellis" %% "geotrellis-raster"% "1.0.1",
   "org.apache.spark"      %% "spark-core"       % "2.0.1" % "provided",
-  "org.scalatest"         %%  "scalatest"       % "2.2.0" % "test"
+  "org.scalatest"         %% "scalatest"        % "2.2.0" % "test"
 )
 
 // https://mvnrepository.com/artifact/org.tensorflow/tensorflow
