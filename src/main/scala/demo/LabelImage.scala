@@ -86,7 +86,7 @@ object LabelImage {
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image)
       val stopTime: Long = System.currentTimeMillis()
       val elapsedTime: Long = stopTime - startTime
-      println(elapsedTime)
+      println(f"ELAPSED TIME: $elapsedTime%d milliseconds")
 
       val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
       val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
