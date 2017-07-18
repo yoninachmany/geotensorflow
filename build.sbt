@@ -31,10 +31,8 @@ libraryDependencies ++= Seq(
   "com.azavea.geotrellis" %% "geotrellis-raster"% "1.0.1",
   "org.apache.spark"      %% "spark-core"       % "2.0.1" % "provided",
   "org.scalatest"         %% "scalatest"        % "2.2.0" % "test"
+  "org.tensorflow"        % "tensorflow"        % "1.2.1"
 )
-
-// https://mvnrepository.com/artifact/org.tensorflow/tensorflow
-libraryDependencies += "org.tensorflow" % "tensorflow" % "1.2.1"
 
 // When creating fat jar, remote some files with
 // bad signatures and resolve conflicts by taking the first
