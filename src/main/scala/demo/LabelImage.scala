@@ -62,8 +62,14 @@ object LabelImage {
       printUsage(System.err)
       System.exit(1)
     }
-    val modelDir: String = "/Users/yoninachmany/azavea/raster-vision-notebooks/" //args(0)
-    val imageFile: String = args(1)
+    // TODO: set to env vars
+    val rasterVisionNotebookDir = "/Users/yoninachmany/azavea/raster-vision-notebooks"
+    val rasterVisionDataDir = "/Users/yoninachmany/azavea/raster-vision-data"
+    val experiment = "tagging/7_7_17/baseline_cyclic_1"
+    val experimentDir = rasterVisionDataDir + "/" + "results" + "/" + experiment
+
+    val modelDir: String = rasterVisionNotebookDir //args(0)
+    val imageFile: String = rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
 
     val startTime: Long = System.currentTimeMillis()
     // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
@@ -82,7 +88,7 @@ object LabelImage {
       val elapsedTime: Long = stopTime - startTime
       println(elapsedTime)
 
-      val thresholdsPath: String = "thresholds.json"
+      val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
       val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
       val lines: String = try source.mkString finally source.close()
       val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
