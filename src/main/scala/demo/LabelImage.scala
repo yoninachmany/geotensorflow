@@ -15,6 +15,20 @@ limitations under the License.
 
 package demo
 
+import geotrellis.raster.io.geotiff.reader.GeoTiffReader
+import geotrellis.raster.io.geotiff._
+import geotrellis.raster.MultibandTile
+import geotrellis.raster.Tile
+import org.tensorflow.DataType
+import org.tensorflow.Graph
+import org.tensorflow.Output
+import org.tensorflow.Session
+import org.tensorflow.Tensor
+import org.tensorflow.TensorFlow
+import org.tensorflow.Shape
+import spray.json._
+import DefaultJsonProtocol._
+
 import java.io.IOException
 import java.io.PrintStream
 import java.nio.charset.Charset
@@ -24,19 +38,6 @@ import java.nio.file.Paths
 import java.nio.ByteBuffer
 import java.util.Arrays
 import java.util.List
-import org.tensorflow.DataType
-import org.tensorflow.Graph
-import org.tensorflow.Output
-import org.tensorflow.Session
-import org.tensorflow.Tensor
-import org.tensorflow.TensorFlow
-import org.tensorflow.Shape
-import geotrellis.raster.io.geotiff.reader.GeoTiffReader
-import geotrellis.raster.io.geotiff._
-import geotrellis.raster.MultibandTile
-import geotrellis.raster.Tile
-import spray.json._
-import DefaultJsonProtocol._
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
@@ -47,10 +48,10 @@ object LabelImage {
     s.println(
       "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)")
     s.println("to label Tiff images.")
-    s.println("TensorFlow version: " + TensorFlow.version())
-    s.println()
+    s.println("TensorFlow version: " + TensorFlow.version)
+    s.println
     s.println("Usage: label_image <model dir> <image file>")
-    s.println()
+    s.println
     s.println("Where:")
     s.println("<model dir> is a directory containing the unzipped contents of the inception model")
     s.println("            (from " + url + ")")
@@ -65,40 +66,43 @@ object LabelImage {
     // TODO: set to env vars
     val rasterVisionNotebookDir = "/Users/yoninachmany/azavea/raster-vision-notebooks"
     val rasterVisionDataDir = "/Users/yoninachmany/azavea/raster-vision-data"
+    val rasterVisionDatasetsDir = rasterVisionDataDir + "/" + "datasets"
+    var rasterVisionPlanetKaggleDatasetDir = rasterVisionDatasetsDir + "/" + "planet_kaggle"
+    val rasterVisionResultsDir = rasterVisionDataDir + "/" + "results"
     val experiment = "tagging/7_7_17/baseline_cyclic_1"
-    val experimentDir = rasterVisionDataDir + "/" + "results" + "/" + experiment
+    val experimentDir = rasterVisionResultsDir + "/" + experiment
 
     val modelDir: String = rasterVisionNotebookDir //args(0)
     val imageFile: String = rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
 
-    val startTime: Long = System.currentTimeMillis()
+    val startTime: Long = System.currentTimeMillis
     // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
     val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"))
     // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
     val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"))
     // val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile))
-    val imagePathString: String = Paths.get(imageFile).toString()
+    val imagePathString: String = Paths.get(imageFile).toString
 
     var image: Tensor = constructAndExecuteGraphToNormalizeImage(imagePathString)
     try {
       // image = constructAndExecuteGraphToNormalizeImage(imageBytes)
       // image = constructAndExecuteGraphToNormalizeImage(imagePathString)
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image)
-      val stopTime: Long = System.currentTimeMillis()
+      val stopTime: Long = System.currentTimeMillis
       val elapsedTime: Long = stopTime - startTime
       println(f"ELAPSED TIME: $elapsedTime%d milliseconds")
 
       val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
       val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
-      val lines: String = try source.mkString finally source.close()
+      val lines: String = try source.mkString finally source.close
       val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
       var i: Int = 0
-      for (i <- 0 to labels.size() - 1) {
+      for (i <- 0 to labels.size - 1) {
         val labelProbability: Float = labelProbabilities(i) * 100f
         val threshold: Float = thresholds(i) * 100f
         val label: String = labels.get(i)
         if (labelProbability >= threshold) {
-          println(f"MATCH: $label%-20s $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
+          println(f"MATCH: $label%-20s ($i%d) $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
         }
       }
 
@@ -107,7 +111,7 @@ object LabelImage {
       // val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
       // println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
     } finally {
-      image.close()
+      image.close
     }
   }
 
@@ -117,7 +121,7 @@ object LabelImage {
     var g: Graph = null
 
     try {
-      g = new Graph()
+      g = new Graph
       // TODO: does GraphBuilder.g need to be closed?
       val b: GraphBuilder = new GraphBuilder(g)
       // Some constants specific to the pre-trained model at:
@@ -131,50 +135,81 @@ object LabelImage {
       // val W: Int = 224
       val mean: Float = 117f
       val scale: Float = 1f
-
-      // val statsPath: String = "planet_kaggle_jpg_channel_stats.json"
-      // val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
-      // val lines: String = try source.mkString finally source.close()
-      // val stats: Object = lines.parseJson.convertTo[Object]
-      // val means: Array[Float] = stats.means
-      // val stds: Array[Float] = stats.stds
-
+      val statsPath: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/planet_kaggle_jpg_channel_stats.json"
+      val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
+      val lines: String = try source.mkString finally source.close
+      val stats: Map[String, Array[Float]] = lines.parseJson.convertTo[Map[String, Array[Float]]]
+      val means: Array[Float] = stats("means")
+      val stds: Array[Float] = stats("stds")
 
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
       // // TODO: final?
       // val input: Output = b.constant("input", imageBytes)
-      val imageTensor: Tensor = b.decodeTiff(imagePathString)
-      // TODO: final
-      val input: Output = b.constantTensor("input", imageTensor)
 
-      // TODO: final?
-
-      // input: 3D tensor
-      // since division and subtraction cannot be done by axis, we need to unstack and then stack
-      // after unstacking, subtract and divide respective mean and std, then stack
-
-      val output: Output =
-        b.div(
-          b.sub(
-            // b.resizeBilinear(
-            b.expandDims(
-              // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
-              b.cast(input, DataType.FLOAT),
-              b.constant("make_batch", 0)),
-            // b.constant("size", Array[Int](H, W))),
-            b.constant("mean", mean)),
-          b.constant("scale", scale))
-      var s: Session = null
+      var imageTensor: Tensor = null
+      var meansTensor: Tensor = null
+      var stdsTensor: Tensor = null
       try {
-        s = new Session(g)
-        return s.runner().fetch(output.op().name()).run().get(0)
+        imageTensor = b.decodeTiff(imagePathString)
+
+        // TODO: final
+        val input: Output = b.constantTensor("input", imageTensor)
+
+        val shape: Array[Long] = imageTensor.shape
+        val height: Int = shape(0).asInstanceOf[Int]
+        val width: Int = shape(1).asInstanceOf[Int]
+        val channels: Int = shape(2).asInstanceOf[Int]
+        val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+        val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+
+        // build a matrix
+        for (h <- 0 to height - 1) {
+           for (w <- 0 to width - 1) {
+             for (c <- 0 to channels - 1) {
+               meansArray(h)(w)(c) = means(c)
+               stdsArray(h)(w)(c) = stds(c)
+             }
+           }
+        }
+
+        meansTensor = Tensor.create(meansArray)
+        stdsTensor = Tensor.create(stdsArray)
+        val meansOutput: Output = b.constantTensor("means", meansTensor)
+        val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
+
+        // since division and subtraction cannot be done by axis, we need to unstack and then stack
+        // after unstacking, subtract and divide respective mean and std, then stack
+        // ! instead of looping, just divide and substract from appropriate tensor!!
+        val output: Output =
+          b.div(
+            b.sub(
+              // b.resizeBilinear(
+              b.expandDims(
+                // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+                b.cast(input, DataType.FLOAT),
+                b.constant("make_batch", 0)),
+              // b.constant("size", Array[Int](H, W))),
+            //   meansOutput),
+            // stdsOutput)
+              b.constant("mean", mean)),
+            b.constant("scale", scale))
+
+          var s: Session = null
+          try {
+            s = new Session(g)
+            return s.runner.fetch(output.op.name).run.get(0)
+          } finally {
+            s.close
+          }
       } finally {
-        s.close()
+        imageTensor.close
+        meansTensor.close
+        stdsTensor.close
       }
     } finally {
-      g.close()
+      g.close
     }
   }
 
@@ -182,13 +217,13 @@ object LabelImage {
   def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
     var g: Graph = null
     try {
-      g = new Graph()
+      g = new Graph
       g.importGraphDef(graphDef)
       var s: Session = null
       var result: Tensor = null
       try {
         s = new Session(g)
-        result = s.runner().feed("input_1", image).fetch("dense/Sigmoid").run().get(0)
+        result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
         // TODO: final?
         val rshape: Array[Long] = result.shape
         val rshapeString: String = Arrays.toString(rshape)
@@ -200,10 +235,10 @@ object LabelImage {
         val nlabels: Int = rshape(1).asInstanceOf[Int]
         return result.copyTo(Array.ofDim[Float](1, nlabels))(0)
       } finally {
-        s.close()
+        s.close
       }
     } finally {
-      g.close()
+      g.close
     }
   }
 
@@ -225,7 +260,7 @@ object LabelImage {
       return Files.readAllBytes(path)
     } catch {
       case e: IOException => {
-        System.err.println("Failed to read [" + path + "]: " + e.getMessage())
+        System.err.println("Failed to read [" + path + "]: " + e.getMessage)
         System.exit(1)
       }
     }
@@ -238,7 +273,7 @@ object LabelImage {
       return Files.readAllLines(path, Charset.forName("UTF-8"))
     } catch {
       case e: IOException => {
-        System.err.println("Failed to read [" + path + "]: " + e.getMessage())
+        System.err.println("Failed to read [" + path + "]: " + e.getMessage)
         System.exit(0)
       }
     }
@@ -266,14 +301,14 @@ object LabelImage {
     }
 
     def cast(value: Output, dtype: DataType): Output = {
-      return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build().output(0)
+      return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build.output(0)
     }
 
     def decodeJpeg(contents: Output, channels: Long): Output = {
       return g.opBuilder("DecodeJpeg", "DecodeJpeg")
         .addInput(contents)
         .setAttr("channels", channels)
-        .build()
+        .build
         .output(0)
     }
 
@@ -293,9 +328,9 @@ object LabelImage {
       // Original Approach: Tensor.create(Object o)
       // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
       // example-400x288.jpg.tif -> BEST MATCH: lakeside (18.52% likely)
-      // int height = tile.rows()
-      // int width = tile.cols()
-      // int channels = tile.bandCount()
+      // int height = tile.rows
+      // int width = tile.cols
+      // int channels = tile.bandCount
       // int[][][] int3DArray = new int[height][width][channels]
       // for (int h = 0 h < height h++) {
       //   for (int w = 0 w < width w++) {
@@ -306,7 +341,7 @@ object LabelImage {
       // }
       //
       // Tensor imageTensor = Tensor.create(int3DArray)
-      // System.out.println(imageTensor.dataType()) // decodeJpeg returns uint8 tensor
+      // System.out.println(imageTensor.dataType) // decodeJpeg returns uint8 tensor
       // DataType.INT32
       // Reason: dataTypeOf(Object o) -> int instances -> DataType.INT32
       // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
@@ -326,7 +361,7 @@ object LabelImage {
       // BEST MATCH: handkerchief (52.15% likely)
       // int bandSize = height * width
       // for (int i = 0 i < channels i++) {
-      //   System.arraycopy(tile.band(i).toBytes(), 0, byteArray, i*bandSize, bandSize)
+      //   System.arraycopy(tile.band(i).toBytes, 0, byteArray, i*bandSize, bandSize)
       // }
 
       // Hopefully right: interleaved R, G, B, by height then width
@@ -344,7 +379,7 @@ object LabelImage {
 
       val data: ByteBuffer = ByteBuffer.wrap(byteArray)
       val imageTensor: Tensor = Tensor.create(dataType, shape, data)
-      // System.out.println(imageTensor.dataType()) // decodeJpeg returns uint8 tensor
+      // System.out.println(imageTensor.dataType) // decodeJpeg returns uint8 tensor
       // DataType.UINT8
       return imageTensor
     }
@@ -352,25 +387,33 @@ object LabelImage {
     def constant(name: String, value: Any): Output = {
       val t: Tensor = Tensor.create(value)
       val o: Output = g.opBuilder("Const", name)
-        .setAttr("dtype", t.dataType())
+        .setAttr("dtype", t.dataType)
         .setAttr("value", t)
-        .build()
+        .build
         .output(0)
-      t.close()
+      t.close
       return o
     }
 
     def constantTensor(name: String, t: Tensor): Output = {
       return g.opBuilder("Const", name)
-        .setAttr("dtype", t.dataType())
+        .setAttr("dtype", t.dataType)
         .setAttr("value", t)
-        .build()
+        .build
         .output(0)
     }
 
     private def binaryOp = true
     def binaryOp(ty: String, in1: Output, in2: Output): Output = {
-      return g.opBuilder(ty, ty).addInput(in1).addInput(in2).build().output(0)
+      return g.opBuilder(ty, ty).addInput(in1).addInput(in2).build.output(0)
+    }
+
+    def stack(values: Output, axis: Long): Output = {
+      return g.opBuilder("Stack", "Stack").addInput(values).setAttr("axis", axis).build.output(0)
+    }
+
+    def unstack(value: Output, axis: Long): Output = {
+      return g.opBuilder("Unstack", "Unstack").addInput(value).setAttr("axis", axis).build.output(0)
     }
   }
 }
