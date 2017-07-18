@@ -186,10 +186,10 @@ object LabelImage {
                 b.cast(input, DataType.FLOAT),
                 b.constant("make_batch", 0)),
               // b.constant("size", Array[Int](H, W))),
-            //   meansOutput),
-            // stdsOutput)
-              b.constant("mean", mean)),
-            b.constant("scale", scale))
+              meansOutput),
+            stdsOutput)
+            //   b.constant("mean", mean)),
+            // b.constant("scale", scale))
 
           var s: Session = null
           try {
