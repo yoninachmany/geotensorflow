@@ -82,11 +82,6 @@ object LabelImage {
       val elapsedTime: Long = stopTime - startTime
       println(elapsedTime)
 
-      // for each label, if likelihood > threshold, print label,
-      // val stream = new FileInputStream(file)
-      // val json = try {  Json.parse(stream) } finally { stream.close() }
-      //
-      //
       val thresholdsPath: String = "thresholds.json"
       val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
       val lines: String = try source.mkString finally source.close()
@@ -126,10 +121,18 @@ object LabelImage {
       // - The colors, represented as R, G, B in 1-byte each were converted to
       //   float using (value - Mean)/Scale.
       // TODO: final?
-      val H: Int = 224
-      val W: Int = 224
+      // val H: Int = 224
+      // val W: Int = 224
       val mean: Float = 117f
       val scale: Float = 1f
+
+      // val statsPath: String = "planet_kaggle_jpg_channel_stats.json"
+      // val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
+      // val lines: String = try source.mkString finally source.close()
+      // val stats: Object = lines.parseJson.convertTo[Object]
+      // val means: Array[Float] = stats.means
+      // val stds: Array[Float] = stats.stds
+
 
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
@@ -141,6 +144,11 @@ object LabelImage {
       val input: Output = b.constantTensor("input", imageTensor)
 
       // TODO: final?
+
+      // input: 3D tensor
+      // since division and subtraction cannot be done by axis, we need to unstack and then stack
+      // after unstacking, subtract and divide respective mean and std, then stack
+
       val output: Output =
         b.div(
           b.sub(
