@@ -31,7 +31,12 @@ libraryDependencies ++= Seq(
   "org.locationtech.geotrellis" %% "geotrellis-raster"  % "1.1.1",
   "org.apache.spark"            %% "spark-core"         % "2.0.1" % "provided",
   "org.scalatest"               %% "scalatest"          % "2.2.0" % "test",
-  "org.tensorflow"              % "tensorflow"          % "1.2.1"
+  "org.tensorflow"              % "tensorflow"          % "1.2.1",
+  "com.twelvemonkeys"           % "twelvemonkeys"       % "3.3.2",
+  "com.twelvemonkeys.imageio"   % "imageio-jpeg"        % "3.3.2",
+  "com.twelvemonkeys.imageio"   % "imageio-tiff"        % "3.3.2",
+  "com.twelvemonkeys.imageio"   % "imageio-core"        % "3.3.2",
+  "org.spire-math"              %% "spire"              % "0.13.0"
 )
 
 // When creating fat jar, remote some files with
