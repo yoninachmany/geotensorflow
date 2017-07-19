@@ -7,8 +7,8 @@ Raster Vision predictions run with GeoTrellis
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
 (./inception5h/download.sh)
-sbt "run-main demo.LabelImage inception5h spacenet.tif"
-# BEST MATCH: jigsaw puzzle (54.27% likely)
+sbt "run-main demo.LabelImage inception5h train_1.tif"
+# BEST MATCH: corn (3.43% likely)
 ```
 
-![SpaceNet image](spacenet.png)
+![Kaggle image](train_1.jpg)
