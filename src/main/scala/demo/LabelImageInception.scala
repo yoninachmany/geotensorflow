@@ -34,7 +34,7 @@ object LabelImageInception {
     val url: String =
       "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip"
     s.println(
-      "Java program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)")
+      "Scala program that uses a pre-trained Inception model (http://arxiv.org/abs/1512.00567)")
     s.println("to label JPEG images.")
     s.println("TensorFlow version: " + TensorFlow.version)
     s.println
@@ -62,9 +62,6 @@ object LabelImageInception {
     var image: Tensor = constructAndExecuteGraphToNormalizeImage(imagePathString)
     try {
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image)
-      val stopTime: Long = System.currentTimeMillis
-      val elapsedTime: Long = stopTime - startTime
-      println(f"ELAPSED TIME: $elapsedTime%d milliseconds")
       val bestLabelIdx: Int = maxIndex(labelProbabilities)
       val bestLabel: String = labels.get(bestLabelIdx)
       val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
@@ -95,7 +92,6 @@ object LabelImageInception {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-
       var imageTensor: Tensor = null
       var meansTensor: Tensor = null
       var stdsTensor: Tensor = null
@@ -219,14 +215,6 @@ object LabelImageInception {
       return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build.output(0)
     }
 
-    // def decodeJpeg(contents: Output, channels: Long): Output = {
-    //   return g.opBuilder("DecodeJpeg", "DecodeJpeg")
-    //     .addInput(contents)
-    //     .setAttr("channels", channels)
-    //     .build
-    //     .output(0)
-    // }
-
     /**
      * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
      * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
@@ -236,34 +224,6 @@ object LabelImageInception {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
       val tile: MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile
 
-      // Testing documentation:
-      // https://github.com/loretoparisi/tensorflow-java
-      // example-400x288.jpg -> BEST MATCH: lakeside (19.00% likely)
-
-      // Original Approach: Tensor.create(Object o)
-      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(java.lang.Object)
-      // example-400x288.jpg.tif -> BEST MATCH: lakeside (18.52% likely)
-      // int height = tile.rows
-      // int width = tile.cols
-      // int channels = tile.bandCount
-      // int[][][] int3DArray = new int[height][width][channels]
-      // for (int h = 0 h < height h++) {
-      //   for (int w = 0 w < width w++) {
-      //     for (int c = 0 c < channels c++) {
-      //       int3DArray[h][w][c] = tile.band(c).get(w, h)
-      //     }
-      //   }
-      // }
-      //
-      // Tensor imageTensor = Tensor.create(int3DArray)
-      // System.out.println(imageTensor.dataType) // decodeJpeg returns uint8 tensor
-      // DataType.INT32
-      // Reason: dataTypeOf(Object o) -> int instances -> DataType.INT32
-      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/java/src/main/java/org/tensorflow/Tensor.java#L531-L532
-      // return imageTensor
-
-      // Only other Approach: Tensor.create(DataType dataType, long[] shape, ByteBuffer data)
-      // https://www.tensorflow.org/api_docs/java/reference/org/tensorflow/Tensor.html#create(org.tensorflow.DataType, long[], java.nio.ByteBuffer)
       val dataType: DataType = DataType.UINT8
       val height: Int = tile.rows
       val width: Int = tile.cols
@@ -272,16 +232,6 @@ object LabelImageInception {
       val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
       val byteArray: Array[Byte] = new Array(height * width * channels)
 
-      // How should byteArray be populated?
-      // Intentionally wrong: non-interleaved, i.e. all R, all G, all B
-      // BEST MATCH: handkerchief (52.15% likely)
-      // int bandSize = height * width
-      // for (int i = 0 i < channels i++) {
-      //   System.arraycopy(tile.band(i).toBytes, 0, byteArray, i*bandSize, bandSize)
-      // }
-
-      // Hopefully right: interleaved R, G, B, by height then width
-      // BEST MATCH: lakeside (18.52% likely)
       var h: Int = 0
       var w: Int = 0
       var c: Int = 0
@@ -295,8 +245,6 @@ object LabelImageInception {
 
       val data: ByteBuffer = ByteBuffer.wrap(byteArray)
       val imageTensor: Tensor = Tensor.create(dataType, shape, data)
-      // System.out.println(imageTensor.dataType) // decodeJpeg returns uint8 tensor
-      // DataType.UINT8
       return imageTensor
     }
 
@@ -322,14 +270,6 @@ object LabelImageInception {
     private def binaryOp = true
     def binaryOp(ty: String, in1: Output, in2: Output): Output = {
       return g.opBuilder(ty, ty).addInput(in1).addInput(in2).build.output(0)
-    }
-
-    def stack(values: Output, axis: Long): Output = {
-      return g.opBuilder("Stack", "Stack").addInput(values).setAttr("axis", axis).build.output(0)
-    }
-
-    def unstack(value: Output, axis: Long): Output = {
-      return g.opBuilder("Unstack", "Unstack").addInput(value).setAttr("axis", axis).build.output(0)
     }
   }
 }
