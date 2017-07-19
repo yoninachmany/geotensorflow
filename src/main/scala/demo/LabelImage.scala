@@ -36,6 +36,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
 import java.awt.image._
 import javax.imageio.ImageIO
+import geotrellis.util.{ByteReader, Filesystem}
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
@@ -70,7 +71,7 @@ object LabelImage {
     val experimentDir = rasterVisionResultsDir + "/" + experiment
 
     val modelDir: String = rasterVisionNotebookDir //args(0)
-    val imageFile: String = rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
+    val imageFile: String = rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"//jpg"// args(1)
 
     val startTime: Long = System.currentTimeMillis
     // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
@@ -142,12 +143,10 @@ object LabelImage {
       // have been more appropriate.
       // val input: Output = b.constant("input", imageBytes)
 
-      var imageTensor: Tensor = null
+      var imageTensor: Tensor = b.decodeTiff(imagePathString)
       var meansTensor: Tensor = null
       var stdsTensor: Tensor = null
       try {
-        imageTensor = b.decodeTiff(imagePathString)
-
         val input: Output = b.constantTensor("input", imageTensor)
 
         val shape: Array[Long] = imageTensor.shape
@@ -311,7 +310,21 @@ object LabelImage {
      */
     def decodeTiff(imagePathString: String): Tensor = {
       // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-      val tile: MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile
+      var tile: MultibandTile = null;
+      if (imagePathString.indexOfSlice("jpg") != -1 || imagePathString.indexOfSlice("jpeg") != -1) {
+        tile = null;
+        // val img =
+        //   ImageIO.read(new java.io.File(imagePathString));
+        // val mbt = convertToMultibandTile(img)
+        // println(mbt.bandCount)
+    // MultibandGeoTiff(mbt, Extent(0,0,1,1), LatLng, GeoTiffOptions.DEFAULT.copy(colorSpace = 5)).write("/Users/rob/proj/small/playground/train_1.tif")
+      }
+      else {
+        val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(imagePathString)
+        // println(tiff.tags)
+        tile = GeoTiffReader.readMultiband(imagePathString).tile
+      }
+
 
       // Testing documentation:
       // https://github.com/loretoparisi/tensorflow-java
