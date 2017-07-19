@@ -6,8 +6,8 @@ Raster Vision predictions run with GeoTrellis
 ```console
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
-(cd inception5h; sh download.sh)
-sbt "core/run-main demo.LabelImage spacenet.tif"
+(./inception5h/download.sh)
+sbt "run-main demo.LabelImage inception5h spacenet.tif"
 ```
 
 ### Results:
