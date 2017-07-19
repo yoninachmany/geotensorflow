@@ -19,6 +19,7 @@ Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions
 
 ```console
 sbt "run-main demo.LabelImageRasterVision <run_name> train_1.tif"
+# Sample output:
 # MATCH: agriculture (93.62% likely)
 # MATCH: artisinal_mine (53.25% likely)
 # MATCH: bare_ground (80.82% likely)
