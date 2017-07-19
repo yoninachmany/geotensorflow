@@ -14,10 +14,14 @@ import javax.imageio.ImageIO
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val pathPrefix = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1"
-    val img = ImageIO.read(new java.io.File(pathPrefix + ".jpg"));
-    val mbt: MultibandTile = convertToMultibandTile(img)
-    val m: MultibandGeoTiff = MultibandGeoTiff(mbt, Extent(0,0,256,256), LatLng, GeoTiffOptions.DEFAULT.copy(colorSpace = 2))
+    // Would pass pathPrefix into `decodeMultibandTile`
+    val pathPrefix: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1"
+    val image: BufferedImage = ImageIO.read(new java.io.File(pathPrefix + ".jpg"));
+    // The new MultibandTile is the end goal
+    val mbt: MultibandTile = convertToMultibandTile(image)
+    // Writing to a tiff only to visually see the new MultibandTile
+    val m: MultibandGeoTiff =
+      MultibandGeoTiff(mbt, Extent(0,0,256,256), LatLng, GeoTiffOptions.DEFAULT.copy(colorSpace = 2))
     m.write(pathPrefix + ".tif")
   }
 
@@ -27,13 +31,15 @@ object Main {
     ArrayMultibandTile(tiles)
   }
 
+  // Copied https://github.com/locationtech/geotrellis/blob/master/geotools/src/main/scala/geotrellis/geotools/GridCoverage2DConverters.scala#L259-L457
+  // Rob didn't want to bring in geotools dependency
+  // Passing in `renderedImage` instead of `val renderedImage = gridCoverage.getRenderedImage`
   def convertToTile(renderedImage: BufferedImage, bandIndex: Int): Tile = {
     val buffer = renderedImage.getData.getDataBuffer
     val sampleModel = renderedImage.getSampleModel
     val rows: Int = renderedImage.getHeight
     val cols: Int = renderedImage.getWidth
     val cellType: CellType = getCellType(renderedImage)
-    // println(cellType)
 
     def default =
       cellType match {
@@ -51,25 +57,20 @@ object Main {
           IntArrayTile(data, cols, rows).convert(cellType)
       }
 
-    // println(buffer.getClass)
     buffer match {
+      // this was the pattern matched
       case byteBuffer: DataBufferByte =>
         sampleModel match {
           case _: PixelInterleavedSampleModel =>
             val data = byteBuffer.getData()
             val numBands = sampleModel.getNumBands
             val innerCols = cols * numBands
-
             cellType match {
               case ct: ByteCells =>
                 PixelInterleaveBandArrayTile(ByteArrayTile(data, innerCols, rows, ct), numBands, bandIndex)
+              // This was the pattern matched
               case ct: UByteCells =>
-                val pixint = PixelInterleaveBandArrayTile(UByteArrayTile(data, innerCols, rows, ct), numBands, bandIndex)
-                val newData = pixint.toBytes
-                val newInnerCols = pixint.cols
-                val newRows = pixint.rows
-                UByteArrayTile(newData, newInnerCols, newRows, ct)
-                // PixelInterleaveBandArrayTile(UByteArrayTile(data, innerCols, rows, ct), numBands, bandIndex)
+                PixelInterleaveBandArrayTile(UByteArrayTile(data, innerCols, rows, ct), numBands, bandIndex)
               case _ =>
                 PixelInterleaveBandArrayTile(UByteArrayTile(data, innerCols, rows, UByteCellType).convert(cellType).toArrayTile, numBands, bandIndex)
             }
@@ -85,6 +86,7 @@ object Main {
                 UByteArrayTile(data, cols, rows, UByteCellType).convert(cellType).toArrayTile
             }
           case mp: MultiPixelPackedSampleModel =>
+            // Since gridCoverage isn't being passed in, commenting this case out
             ???
             // // Tricky sample model, just do the slow direct thing.
             // val result = ArrayTile.alloc(cellType, cols, rows)
@@ -235,8 +237,18 @@ object Main {
     }
   }
 
+  // Copied https://github.com/locationtech/geotrellis/blob/master/geotools/src/main/scala/geotrellis/geotools/GridCoverage2DConverters.scala#L64-L162
+  /**
+    * Given a GridCoverage2D and an index, this function return the
+    * Geotrellis CellType that best approximates that of the given
+    * layer.
+    *
+    * @param  gridCoverage2D  The GeoTools GridCoverage2D object
+    * @param  bandIndex       The index in gridCoverage2D to expose as the sole band of this tile
+    */
+  // Again, passing in `renderedImage` instead of `val renderedImage = gridCoverage.getRenderedImage`
   def getCellType(renderedImage: BufferedImage): CellType =
-      // UShortCellType
+    // For testing
     UByteCellType
   //   val buffer = renderedImage.getData.getDataBuffer
   //   val dataType = buffer.getDataType
@@ -326,5 +338,4 @@ object Main {
   //       throw new Exception(s"Unable to convert GridCoverage2D: Unsupported CellType (NoData=${noDataValue}  TypeEnum=${dataType}  SampleDimensionType=${sampleType}")
   //   }
   // }
-
 }
