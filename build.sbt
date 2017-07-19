@@ -1,5 +1,5 @@
 // Rename this as you see fit
-name := "geotrellis-sbt-template"
+name := "geotensorflow"
 
 version := "0.1.0"
 
