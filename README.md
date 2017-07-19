@@ -1,26 +1,13 @@
-GeoTrellis SBT TensorFlow
+Raster Vision predictions run with GeoTrellis
 =======================
 
-This is an application that uses GeoTrellis to read in GeoTiffs to TensorFlow for image ML tasks.
-
-### To fetch this repo:
+## Quick Start
 
 ```console
-git clone https://github.com/geotrellis/geotrellis-sbt-template.git
-cd geotrellis-sbt-tensorflow
-```
-
-### To build the assembly .jar file:
-
-```console
-sbt assembly
-```
-
-### To run:
-```console
-sbt
-compile
-run inception5h sample.tif
+git clone https://github.com/yoninachmany/geotensorflow.git
+cd geotensorflow
+(./inception5h/download.sh)
+sbt "run-main demo.LabelImage inception5h spacenet.tif"
 ```
 
 ### Results:
