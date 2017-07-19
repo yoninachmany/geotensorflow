@@ -15,29 +15,18 @@ limitations under the License.
 
 package demo
 
+import geotrellis.raster.{Tile, MultibandTile}
+import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
-import geotrellis.raster.io.geotiff._
-import geotrellis.raster.MultibandTile
-import geotrellis.raster.Tile
-import org.tensorflow.DataType
-import org.tensorflow.Graph
-import org.tensorflow.Output
-import org.tensorflow.Session
-import org.tensorflow.Tensor
-import org.tensorflow.TensorFlow
-import org.tensorflow.Shape
+import org.tensorflow.{DataType, Graph, Output, Session, Tensor, TensorFlow, Shape}
 import spray.json._
 import DefaultJsonProtocol._
 
-import java.io.IOException
-import java.io.PrintStream
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.io.{IOException, PrintStream}
 import java.nio.ByteBuffer
-import java.util.Arrays
-import java.util.List
+import java.nio.charset.Charset
+import java.nio.file.{Files, Path, Paths}
+import java.util.{Arrays, List}
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
 object LabelImage {
