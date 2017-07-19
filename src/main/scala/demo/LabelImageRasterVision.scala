@@ -29,7 +29,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
 
 /** Sample use of the TensorFlow Java API to label images using a pre-trained model. */
-object LabelImage {
+object LabelImageRasterVision {
   def printUsage(s: PrintStream) {
     val url: String =
       "https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip"
@@ -51,53 +51,40 @@ object LabelImage {
       printUsage(System.err)
       System.exit(1)
     }
-    // TODO: set to env vars
-    val rasterVisionNotebookDir = "/Users/yoninachmany/azavea/raster-vision-notebooks"
-    val rasterVisionDataDir = "/Users/yoninachmany/azavea/raster-vision-data"
-    val rasterVisionDatasetsDir = rasterVisionDataDir + "/" + "datasets"
-    var rasterVisionPlanetKaggleDatasetDir = rasterVisionDatasetsDir + "/" + "planet_kaggle"
-    val rasterVisionResultsDir = rasterVisionDataDir + "/" + "results"
-    val experiment = "tagging/7_7_17/baseline_cyclic_1"
-    val experimentDir = rasterVisionResultsDir + "/" + experiment
-
-    val modelDir: String = args(0) //rasterVisionNotebookDir //args(0)
+    val experiment: String = args(0) //rasterVisionNotebookDir //args(0)
     val imageFile: String = args(1) //rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
 
+    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
+    val resultsDir = Paths.get(rasterVisionDataDir, "results").toString()
+    val experimentDir = Paths.get(resultsDir, experiment).toString()
+
     val startTime: Long = System.currentTimeMillis
-    val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
-    // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"))
-    val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
-    // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"))
-    // val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile))
+    val graphName = experiment.replace('/', '_') + "_graph.pb"
+    val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(experimentDir, graphName))
+    val labels: List[String] = readAllLinesOrExit(Paths.get("labels.txt"))
     val imagePathString: String = Paths.get(imageFile).toString
 
     var image: Tensor = constructAndExecuteGraphToNormalizeImage(imagePathString)
     try {
-      // image = constructAndExecuteGraphToNormalizeImage(imageBytes)
-      // image = constructAndExecuteGraphToNormalizeImage(imagePathString)
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image)
       val stopTime: Long = System.currentTimeMillis
       val elapsedTime: Long = stopTime - startTime
       println(f"ELAPSED TIME: $elapsedTime%d milliseconds")
 
-      // val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
-      // val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
-      // val lines: String = try source.mkString finally source.close
-      // val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
-      // var i: Int = 0
-      // for (i <- 0 to labels.size - 1) {
-      //   val labelProbability: Float = labelProbabilities(i) * 100f
-      //   val threshold: Float = thresholds(i) * 100f
-      //   val label: String = labels.get(i)
-      //   if (labelProbability >= threshold) {
-      //     println(f"MATCH: $label%-20s ($i%d) $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
-      //   }
-      // }
-
-      val bestLabelIdx: Int = maxIndex(labelProbabilities)
-      val bestLabel: String = labels.get(bestLabelIdx)
-      val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
-      println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
+      val thresholdsPath: String = Paths.get(experimentDir, "thresholds.json").toString()
+      val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
+      val lines: String = try source.mkString finally source.close
+      val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
+      var i: Int = 0
+      for (i <- 0 to labels.size - 1) {
+        val labelProbability: Float = labelProbabilities(i) * 100f
+        val threshold: Float = thresholds(i) * 100f
+        val label: String = labels.get(i)
+        if (labelProbability >= threshold) {
+          // println(f"MATCH: $label%-20s ($i%d) $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
+          println(f"MATCH: $label%s ($labelProbability%.2f%% likely)")
+        }
+      }
     } finally {
       image.close
     }
@@ -117,10 +104,6 @@ object LabelImage {
       // - The model was trained with images scaled to 224x224 pixels.
       // - The colors, represented as R, G, B in 1-byte each were converted to
       //   float using (value - Mean)/Scale.
-      val H: Int = 224
-      val W: Int = 224
-      val mean: Float = 117f
-      val scale: Float = 1f
       val statsPath: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/planet_kaggle_jpg_channel_stats.json"
       val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
       val lines: String = try source.mkString finally source.close
@@ -140,29 +123,28 @@ object LabelImage {
         imageTensor = b.decodeTiff(imagePathString)
 
         val input: Output = b.constantTensor("input", imageTensor)
-        // val input: Output = b.decodeJpeg(path, 3)
 
-        // val shape: Array[Long] = imageTensor.shape
-        // val height: Int = shape(0).asInstanceOf[Int]
-        // val width: Int = shape(1).asInstanceOf[Int]
-        // val channels: Int = shape(2).asInstanceOf[Int]
-        // val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
-        // val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
-        //
-        // // build a matrix
-        // for (h <- 0 to height - 1) {
-        //    for (w <- 0 to width - 1) {
-        //      for (c <- 0 to channels - 1) {
-        //        meansArray(h)(w)(c) = means(c)
-        //        stdsArray(h)(w)(c) = stds(c)
-        //      }
-        //    }
-        // }
-        //
-        // meansTensor = Tensor.create(meansArray)
-        // stdsTensor = Tensor.create(stdsArray)
-        // val meansOutput: Output = b.constantTensor("means", meansTensor)
-        // val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
+        val shape: Array[Long] = imageTensor.shape
+        val height: Int = shape(0).asInstanceOf[Int]
+        val width: Int = shape(1).asInstanceOf[Int]
+        val channels: Int = shape(2).asInstanceOf[Int]
+        val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+        val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+
+        // build a matrix
+        for (h <- 0 to height - 1) {
+           for (w <- 0 to width - 1) {
+             for (c <- 0 to channels - 1) {
+               meansArray(h)(w)(c) = means(c)
+               stdsArray(h)(w)(c) = stds(c)
+             }
+           }
+        }
+
+        meansTensor = Tensor.create(meansArray)
+        stdsTensor = Tensor.create(stdsArray)
+        val meansOutput: Output = b.constantTensor("means", meansTensor)
+        val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
 
         // since division and subtraction cannot be done by axis, we need to unstack and then stack
         // after unstacking, subtract and divide respective mean and std, then stack
@@ -170,16 +152,11 @@ object LabelImage {
         val output: Output =
           b.div(
             b.sub(
-              b.resizeBilinear(
               b.expandDims(
-                // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
                 b.cast(input, DataType.FLOAT),
                 b.constant("make_batch", 0)),
-              b.constant("size", Array[Int](H, W))),
-            //   meansOutput),
-            // stdsOutput)
-              b.constant("mean", mean)),
-            b.constant("scale", scale))
+              meansOutput),
+            stdsOutput)
 
           var s: Session = null
           try {
@@ -208,8 +185,7 @@ object LabelImage {
       var result: Tensor = null
       try {
         s = new Session(g)
-        // result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
-        result = s.runner().feed("input", image).fetch("output").run().get(0)
+        result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
         val rshape: Array[Long] = result.shape
         val rshapeString: String = Arrays.toString(rshape)
         if (result.numDimensions != 2 || rshape(0) != 1) {
@@ -225,18 +201,6 @@ object LabelImage {
     } finally {
       g.close
     }
-  }
-
-  private def maxIndex = true
-  def maxIndex(probabilities: Array[Float]): Int = {
-    var best: Int = 0
-    val i: Int = 1
-    for (i <- 1 to probabilities.length-1) {
-      if (probabilities(i) > probabilities(best)) {
-        best = i
-      }
-    }
-    return best
   }
 
   private def readAllBytesOrExit = true
