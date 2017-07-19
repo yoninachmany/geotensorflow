@@ -140,28 +140,29 @@ object LabelImage {
         imageTensor = b.decodeTiff(imagePathString)
 
         val input: Output = b.constantTensor("input", imageTensor)
+        // val input: Output = b.decodeJpeg(path, 3)
 
-        val shape: Array[Long] = imageTensor.shape
-        val height: Int = shape(0).asInstanceOf[Int]
-        val width: Int = shape(1).asInstanceOf[Int]
-        val channels: Int = shape(2).asInstanceOf[Int]
-        val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
-        val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
-
-        // build a matrix
-        for (h <- 0 to height - 1) {
-           for (w <- 0 to width - 1) {
-             for (c <- 0 to channels - 1) {
-               meansArray(h)(w)(c) = means(c)
-               stdsArray(h)(w)(c) = stds(c)
-             }
-           }
-        }
-
-        meansTensor = Tensor.create(meansArray)
-        stdsTensor = Tensor.create(stdsArray)
-        val meansOutput: Output = b.constantTensor("means", meansTensor)
-        val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
+        // val shape: Array[Long] = imageTensor.shape
+        // val height: Int = shape(0).asInstanceOf[Int]
+        // val width: Int = shape(1).asInstanceOf[Int]
+        // val channels: Int = shape(2).asInstanceOf[Int]
+        // val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+        // val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+        //
+        // // build a matrix
+        // for (h <- 0 to height - 1) {
+        //    for (w <- 0 to width - 1) {
+        //      for (c <- 0 to channels - 1) {
+        //        meansArray(h)(w)(c) = means(c)
+        //        stdsArray(h)(w)(c) = stds(c)
+        //      }
+        //    }
+        // }
+        //
+        // meansTensor = Tensor.create(meansArray)
+        // stdsTensor = Tensor.create(stdsArray)
+        // val meansOutput: Output = b.constantTensor("means", meansTensor)
+        // val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
 
         // since division and subtraction cannot be done by axis, we need to unstack and then stack
         // after unstacking, subtract and divide respective mean and std, then stack
@@ -188,9 +189,9 @@ object LabelImage {
             s.close
           }
       } finally {
-        imageTensor.close
-        meansTensor.close
-        stdsTensor.close
+        // imageTensor.close
+        // meansTensor.close
+        // stdsTensor.close
       }
     } finally {
       g.close
@@ -288,13 +289,13 @@ object LabelImage {
       return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build.output(0)
     }
 
-    def decodeJpeg(contents: Output, channels: Long): Output = {
-      return g.opBuilder("DecodeJpeg", "DecodeJpeg")
-        .addInput(contents)
-        .setAttr("channels", channels)
-        .build
-        .output(0)
-    }
+    // def decodeJpeg(contents: Output, channels: Long): Output = {
+    //   return g.opBuilder("DecodeJpeg", "DecodeJpeg")
+    //     .addInput(contents)
+    //     .setAttr("channels", channels)
+    //     .build
+    //     .output(0)
+    // }
 
     /**
      * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
@@ -336,7 +337,8 @@ object LabelImage {
       val dataType: DataType = DataType.UINT8
       val height: Int = tile.rows
       val width: Int = tile.cols
-      val channels: Int = tile.bandCount
+      // TODO: HANDLE 4 channels!!
+      val channels: Int = 3 //tile.bandCount
       val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
       val byteArray: Array[Byte] = new Array(height * width * channels)
 
