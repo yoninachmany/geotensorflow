@@ -60,14 +60,14 @@ object LabelImage {
     val experiment = "tagging/7_7_17/baseline_cyclic_1"
     val experimentDir = rasterVisionResultsDir + "/" + experiment
 
-    val modelDir: String = rasterVisionNotebookDir //args(0)
-    val imageFile: String = rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
+    val modelDir: String = args(0) //rasterVisionNotebookDir //args(0)
+    val imageFile: String = args(1) //rasterVisionDataDir + "/" + "datasets/planet_kaggle/train-tif-v2/train_0.tif"// args(1)
 
     val startTime: Long = System.currentTimeMillis
-    // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
-    val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"))
-    // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
-    val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"))
+    val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
+    // val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "output_graph.pb"))
+    val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
+    // val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "labels.txt"))
     // val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile))
     val imagePathString: String = Paths.get(imageFile).toString
 
@@ -80,24 +80,24 @@ object LabelImage {
       val elapsedTime: Long = stopTime - startTime
       println(f"ELAPSED TIME: $elapsedTime%d milliseconds")
 
-      val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
-      val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
-      val lines: String = try source.mkString finally source.close
-      val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
-      var i: Int = 0
-      for (i <- 0 to labels.size - 1) {
-        val labelProbability: Float = labelProbabilities(i) * 100f
-        val threshold: Float = thresholds(i) * 100f
-        val label: String = labels.get(i)
-        if (labelProbability >= threshold) {
-          println(f"MATCH: $label%-20s ($i%d) $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
-        }
-      }
+      // val thresholdsPath: String = experimentDir + "/" + "thresholds.json"
+      // val source: scala.io.Source = scala.io.Source.fromFile(thresholdsPath)
+      // val lines: String = try source.mkString finally source.close
+      // val thresholds: Array[Float] = lines.parseJson.convertTo[Array[Float]]
+      // var i: Int = 0
+      // for (i <- 0 to labels.size - 1) {
+      //   val labelProbability: Float = labelProbabilities(i) * 100f
+      //   val threshold: Float = thresholds(i) * 100f
+      //   val label: String = labels.get(i)
+      //   if (labelProbability >= threshold) {
+      //     println(f"MATCH: $label%-20s ($i%d) $labelProbability%15.2f%% likely $threshold%15.2f%% threshold")
+      //   }
+      // }
 
-      // val bestLabelIdx: Int = maxIndex(labelProbabilities)
-      // val bestLabel: String = labels.get(bestLabelIdx)
-      // val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
-      // println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
+      val bestLabelIdx: Int = maxIndex(labelProbabilities)
+      val bestLabel: String = labels.get(bestLabelIdx)
+      val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
+      println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
     } finally {
       image.close
     }
@@ -117,10 +117,10 @@ object LabelImage {
       // - The model was trained with images scaled to 224x224 pixels.
       // - The colors, represented as R, G, B in 1-byte each were converted to
       //   float using (value - Mean)/Scale.
-      // val H: Int = 224
-      // val W: Int = 224
-      // val mean: Float = 117f
-      // val scale: Float = 1f
+      val H: Int = 224
+      val W: Int = 224
+      val mean: Float = 117f
+      val scale: Float = 1f
       val statsPath: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/planet_kaggle_jpg_channel_stats.json"
       val source: scala.io.Source = scala.io.Source.fromFile(statsPath)
       val lines: String = try source.mkString finally source.close
@@ -169,16 +169,16 @@ object LabelImage {
         val output: Output =
           b.div(
             b.sub(
-              // b.resizeBilinear(
+              b.resizeBilinear(
               b.expandDims(
                 // b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
                 b.cast(input, DataType.FLOAT),
                 b.constant("make_batch", 0)),
-              // b.constant("size", Array[Int](H, W))),
-              meansOutput),
-            stdsOutput)
-            //   b.constant("mean", mean)),
-            // b.constant("scale", scale))
+              b.constant("size", Array[Int](H, W))),
+            //   meansOutput),
+            // stdsOutput)
+              b.constant("mean", mean)),
+            b.constant("scale", scale))
 
           var s: Session = null
           try {
@@ -207,7 +207,8 @@ object LabelImage {
       var result: Tensor = null
       try {
         s = new Session(g)
-        result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
+        // result = s.runner.feed("input_1", image).fetch("dense/Sigmoid").run.get(0)
+        result = s.runner().feed("input", image).fetch("output").run().get(0)
         val rshape: Array[Long] = result.shape
         val rshapeString: String = Arrays.toString(rshape)
         if (result.numDimensions != 2 || rshape(0) != 1) {
@@ -225,17 +226,17 @@ object LabelImage {
     }
   }
 
-  // private def maxIndex = true
-  // def maxIndex(probabilities: Array[Float]): Int = {
-  //   var best: Int = 0
-  //   val i: Int = 1
-  //   for (i <- 1 to probabilities.length-1) {
-  //     if (probabilities(i) > probabilities(best)) {
-  //       best = i
-  //     }
-  //   }
-  //   return best
-  // }
+  private def maxIndex = true
+  def maxIndex(probabilities: Array[Float]): Int = {
+    var best: Int = 0
+    val i: Int = 1
+    for (i <- 1 to probabilities.length-1) {
+      if (probabilities(i) > probabilities(best)) {
+        best = i
+      }
+    }
+    return best
+  }
 
   private def readAllBytesOrExit = true
   def readAllBytesOrExit(path: Path): Array[Byte] = {
