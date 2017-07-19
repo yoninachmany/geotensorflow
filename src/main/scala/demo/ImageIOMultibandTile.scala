@@ -12,23 +12,13 @@ import spire.syntax.cfor._
 import java.awt.image._
 import javax.imageio.ImageIO
 
-
 object Main {
   def main(args: Array[String]): Unit = {
-    // val readers = ImageIO.getImageReadersByFormatName("JPEG")
-    // while (readers.hasNext()) {
-    //   System.out.println("reader: " + readers.next())
-    // }
-    val img =
-      ImageIO.read(new java.io.File("/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1.jpg"));
+    val pathPrefix = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1"
+    val img = ImageIO.read(new java.io.File(pathPrefix + ".jpg"));
     val mbt: MultibandTile = convertToMultibandTile(img)
-    println(mbt)
-    println(mbt.bands)
-    println(mbt.toGeoTiffTile.segmentLayout)
-    // issue: we return PixelInterleaveBandArrayTile, other way returns UByteRawArrayTile
     val m: MultibandGeoTiff = MultibandGeoTiff(mbt, Extent(0,0,256,256), LatLng, GeoTiffOptions.DEFAULT.copy(colorSpace = 2))
-    // val m2: MultibandGeoTiff = new MultibandGeoTiff(m.tile.toGeoTiffTile.toArrayTile)
-    m.write("/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1.tif")
+    m.write(pathPrefix + ".tif")
   }
 
   def convertToMultibandTile(image: BufferedImage): MultibandTile = {
