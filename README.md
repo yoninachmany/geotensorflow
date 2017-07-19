@@ -15,7 +15,7 @@ sbt "run-main demo.LabelImageInception inception5h train_1.tif"
 
 ## Work with Raster Vision
 
-Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions for initial setup and running experiments (only running locally is supported right now).
+Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions to setup and run experiments locally.
 
 ```console
 sbt "run-main demo.LabelImageRasterVision <run_name> train_1.tif"
