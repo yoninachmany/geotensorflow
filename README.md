@@ -10,9 +10,6 @@ cd geotensorflow
 sbt "core/run-main demo.LabelImage spacenet.tif"
 ```
 
-
-```
-
 ### Results:
 **SpaceNetImage - originally tiff**
 
