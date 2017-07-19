@@ -21,10 +21,6 @@ import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import org.tensorflow.{DataType, Graph, Output, Session, Tensor, TensorFlow, Shape}
 import spray.json._
 import DefaultJsonProtocol._
-import com.twelvemonkeys.image.ResampleOp
-import com.twelvemonkeys.imageio.AbstractMetadata
-import com.twelvemonkeys.imageio.AbstractMetadata
-import spire.syntax.cfor._
 
 import java.io.{IOException, PrintStream}
 import java.nio.ByteBuffer
