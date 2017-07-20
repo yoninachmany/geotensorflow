@@ -51,13 +51,10 @@ object LabelImageInception {
     val labels: List[String] = LabelImageUtils.readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
     val imageBytes: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(imageFile));
 
-    var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeImage(imageBytes)
+    var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionImage(imageBytes)
     try {
       val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionGraph(graphDef, image)
-      val bestLabelIdx: Int = LabelImageUtils.maxIndex(labelProbabilities)
-      val bestLabel: String = labels.get(bestLabelIdx)
-      val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
-      println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
+      LabelImageUtils.printBestMatch(labelProbabilities, labels)
     } finally {
       image.close
     }

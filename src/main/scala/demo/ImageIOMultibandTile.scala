@@ -1,4 +1,4 @@
-package whocares
+package demo
 
 import geotrellis.raster._
 import geotrellis.raster.io.geotiff._
@@ -12,7 +12,7 @@ import spire.syntax.cfor._
 import java.awt.image._
 import javax.imageio.ImageIO
 
-object Main {
+object ImageIOMultibandTile {
   def main(args: Array[String]): Unit = {
     // Would pass pathPrefix into `decodeMultibandTile`
     val pathPrefix: String = "/Users/yoninachmany/azavea/raster-vision-data/datasets/planet_kaggle/train-jpg/train_1"

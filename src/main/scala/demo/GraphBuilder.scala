@@ -15,7 +15,15 @@ limitations under the License.
 
 package demo
 
+import geotrellis.raster.{Tile, MultibandTile}
+import geotrellis.raster.io.geotiff.MultibandGeoTiff
+import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import org.tensorflow.{DataType, Graph, Output, Tensor}
+
+import java.nio.ByteBuffer
+import java.awt.image._
+import javax.imageio.ImageIO
+import ImageIOMultibandTile._
 
 // In the fullness of time, equivalents of the methods of this class should be auto-generated from
 // the OpDefs linked into libtensorflow_jni.so. That would match what is done in other languages
@@ -71,5 +79,47 @@ class GraphBuilder(g: Graph) {
       .setAttr("value", t)
       .build
       .output(0)
+  }
+
+  /**
+   * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
+   * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
+   * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
+   */
+  def decodeWithMultibandTile(imagePathString: String): Tensor = {
+    // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
+    var tile: MultibandTile = null;
+    val isJpg = imagePathString.indexOfSlice("jpg") != -1 || imagePathString.indexOfSlice("jpg") != -1
+    println(isJpg)
+
+    if (isJpg) {
+      val image: BufferedImage = ImageIO.read(new java.io.File(imagePathString));
+      tile = ImageIOMultibandTile.convertToMultibandTile(image)
+    } else {
+      tile = GeoTiffReader.readMultiband(imagePathString).tile
+    }
+
+    val dataType: DataType = DataType.UINT8
+    val height: Int = tile.rows
+    val width: Int = tile.cols
+    // TODO: HANDLE 4 channels!!
+    val channels: Int = 3 //tile.bandCount
+    val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
+    val byteArray: Array[Byte] = new Array(height * width * channels)
+
+    var h: Int = 0
+    var w: Int = 0
+    var c: Int = 0
+    for (h <- 0 to height - 1) {
+      for (w <- 0 to width - 1) {
+        for (c <- 0 to channels - 1) {
+          byteArray(h * (width * channels) + w * channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
+        }
+      }
+    }
+
+    val data: ByteBuffer = ByteBuffer.wrap(byteArray)
+    val imageTensor: Tensor = Tensor.create(dataType, shape, data)
+    return imageTensor
   }
 }
