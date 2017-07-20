@@ -1,5 +1,11 @@
-Raster Vision predictions run with GeoTrellis
+GeoTensorFlow
 =======================
+
+## Goal: label training image from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle)
+
+![Kaggle image](train_1.jpg)
+
+> agriculture clear primary water
 
 ## Quick Start
 
@@ -10,8 +16,6 @@ cd geotensorflow
 sbt "run-main demo.LabelImageInception inception5h train_1.tif"
 # BEST MATCH: corn (3.43% likely)
 ```
-
-![Kaggle image](train_1.jpg)
 
 ## Work with Raster Vision
 
