@@ -75,7 +75,7 @@ class GraphBuilder(g: Graph) {
    */
   def decodeWithMultibandTile(imagePathString: String): Tensor = {
     // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-    var tile: MultibandTile = if (isJpg(imagePathString)) then getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
+    var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
 
     val dataType: DataType = DataType.UINT8
     val height: Int = tile.rows
