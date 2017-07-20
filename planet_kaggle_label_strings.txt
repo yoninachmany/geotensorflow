@@ -1,17 +1,17 @@
 agriculture
-artisinal_mine
+artisinal mine
 bare_ground
 blooming
 blow_down
 clear
 cloudy
-conventional_mine
+conventional mine
 cultivation
 habitation
 haze
-partly_cloudy
+partly cloudy
 primary
 road
-selective_logging
-slash_burn
+selective logging
+slash burn
 water
