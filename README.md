@@ -9,7 +9,7 @@ GeoTensorFlow
 agriculture clear primary water
 ```
 
-## Quick Start
+## Inception baseline
 
 ```console
 git clone https://github.com/yoninachmany/geotensorflow.git
@@ -24,7 +24,7 @@ sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 BEST MATCH: nematode (9.63% likely)
 ```
 
-## Work with Raster Vision
+## Improve with Raster Vision
 
 Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions to setup and run experiments locally.
 
