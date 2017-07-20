@@ -54,12 +54,12 @@ object LabelImageInception {
     val modelDir: String = args(0)
     val imageFile: String = args(1)
 
-    val startTime: Long = System.currentTimeMillis
     val graphDef: Array[Byte] = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
     val labels: List[String] = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
-    val imagePathString: String = Paths.get(imageFile).toString
+    val imageBytes: Array[Byte] = readAllBytesOrExit(Paths.get(imageFile));
+    // val imagePathString: String = Paths.get(imageFile).toString
 
-    var image: Tensor = constructAndExecuteGraphToNormalizeImage(imagePathString)
+    var image: Tensor = constructAndExecuteGraphToNormalizeImage(imageBytes)
     try {
       val labelProbabilities: Array[Float] = executeInceptionGraph(graphDef, image)
       val bestLabelIdx: Int = maxIndex(labelProbabilities)
@@ -72,7 +72,7 @@ object LabelImageInception {
   }
 
   private def constructAndExecuteGraphToNormalizeImage = true
-  def constructAndExecuteGraphToNormalizeImage(imagePathString: String): Tensor = {
+  def constructAndExecuteGraphToNormalizeImage(imageBytes: Array[Byte]): Tensor = {
     var g: Graph = null
 
     try {
@@ -92,33 +92,23 @@ object LabelImageInception {
       // Since the graph is being constructed once per execution here, we can use a constant for the
       // input image. If the graph were to be re-used for multiple input images, a placeholder would
       // have been more appropriate.
-      var imageTensor: Tensor = null
-      var meansTensor: Tensor = null
-      var stdsTensor: Tensor = null
+      val input: Output = b.constant("input", imageBytes)
+      val output: Output =
+        b.div(
+          b.sub(
+            b.resizeBilinear(
+            b.expandDims(
+              b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+              b.constant("make_batch", 0)),
+            b.constant("size", Array[Int](H, W))),
+            b.constant("mean", mean)),
+          b.constant("scale", scale))
+      var s: Session = null
       try {
-        imageTensor = b.decodeTiff(imagePathString)
-
-        val input: Output = b.constantTensor("input", imageTensor)
-        val output: Output =
-          b.div(
-            b.sub(
-              b.resizeBilinear(
-              b.expandDims(
-                b.cast(input, DataType.FLOAT),
-                b.constant("make_batch", 0)),
-              b.constant("size", Array[Int](H, W))),
-              b.constant("mean", mean)),
-            b.constant("scale", scale))
-
-          var s: Session = null
-          try {
-            s = new Session(g)
-            return s.runner.fetch(output.op.name).run.get(0)
-          } finally {
-            s.close
-          }
+        s = new Session(g)
+        return s.runner.fetch(output.op.name).run.get(0)
       } finally {
-        imageTensor.close
+        s.close
       }
     } finally {
       g.close
@@ -215,37 +205,12 @@ object LabelImageInception {
       return g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build.output(0)
     }
 
-    /**
-     * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
-     * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
-     * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
-     */
-    def decodeTiff(imagePathString: String): Tensor = {
-      // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-      val tile: MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile
-
-      val dataType: DataType = DataType.UINT8
-      val height: Int = tile.rows
-      val width: Int = tile.cols
-      // TODO: HANDLE 4 channels!!
-      val channels: Int = 3 //tile.bandCount
-      val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
-      val byteArray: Array[Byte] = new Array(height * width * channels)
-
-      var h: Int = 0
-      var w: Int = 0
-      var c: Int = 0
-      for (h <- 0 to height - 1) {
-        for (w <- 0 to width - 1) {
-          for (c <- 0 to channels - 1) {
-            byteArray(h * (width * channels) + w * channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
-          }
-        }
-      }
-
-      val data: ByteBuffer = ByteBuffer.wrap(byteArray)
-      val imageTensor: Tensor = Tensor.create(dataType, shape, data)
-      return imageTensor
+    def decodeJpeg(contents: Output, channels: Long): Output = {
+      return g.opBuilder("DecodeJpeg", "DecodeJpeg")
+          .addInput(contents)
+          .setAttr("channels", channels)
+          .build
+          .output(0);
     }
 
     def constant(name: String, value: Any): Output = {
