@@ -198,20 +198,14 @@ object LabelImageUtils {
         val meansOutput: Output = b.constantTensor("means", meansTensor)
         val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
 
-        println(imageTensor)
-        println(input.shape)
-
-        // why expandDims?
-        val output: Output = //input
-          // b.div(
-            // b.sub(
+        val output: Output =
+          b.div(
+            b.sub(
               b.expandDims(
                 b.cast(input, DataType.FLOAT),
-                b.constant("make_batch", 0))//,
-              // meansOutput),
-            // stdsOutput)
-
-        println(output.shape)
+                b.constant("make_batch", 0)),
+              meansOutput),
+            stdsOutput)
 
         var s: Session = null
         try {
@@ -239,8 +233,6 @@ object LabelImageUtils {
   }
 
   def getGraphPath(runName: String): Path = {
-    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
-    val resultsDir = Paths.get(rasterVisionDataDir, "results").toString()
     val experimentDir = getExperimentDir(runName)
 
     // Convention from code that writes frozen graph to experiment directory.
@@ -269,7 +261,15 @@ object LabelImageUtils {
       val label: String = labels.get(i)
       if (labelProbability >= threshold) {
         print(f"$label%s ")
-        println()
+      }
+    }
+    println()
+    i = 0
+    for (i <- 0 to labels.size - 1) {
+      val labelProbability: Float = labelProbabilities(i) * 100f
+      val threshold: Float = thresholds(i) * 100f
+      val label: String = labels.get(i)
+      if (labelProbability >= threshold) {
         println(f"MATCH: $label%s ($labelProbability%.2f%% likely)")
       }
     }
