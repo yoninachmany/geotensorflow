@@ -18,6 +18,8 @@ cd geotensorflow
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 ```
 
+![Kaggle image](train_1.jpg)
+
 ```
 BEST MATCH: nematode (9.63% likely)
 ```
@@ -29,6 +31,8 @@ Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions
 ```console
 sbt "run-main demo.LabelImageRasterVision <run_name> train_1.jpg"
 ```
+
+![Kaggle image](train_1.jpg)
 
 ```
 agriculture artisinal_mine bare_ground blow_down clear cloudy cultivation habitation haze partly_cloudy primary road 
