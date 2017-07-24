@@ -59,7 +59,9 @@ object LabelImageInception {
 
     var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionImage(imageBytes)
     try {
-      val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionGraph(graphDef, image)
+      val labelProbabilities: Array[Float] =
+        LabelImageUtils.executeInceptionV5Graph(graphDef, image)
+        // LabelImageUtils.executeInceptionV3Graph(graphDef, image)
       LabelImageUtils.printBestMatch(labelProbabilities, labels)
     } finally {
       image.close
