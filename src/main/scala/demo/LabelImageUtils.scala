@@ -55,24 +55,22 @@ object LabelImageUtils {
           b.constant("size", Array[Int](H, W))),
           b.constant("mean", mean)),
         b.constant("scale", scale))
-    var s: Session = new Session(g)
+
+    val s: Session = new Session(g)
+    return s.runner.fetch(output.op.name).run.get(0)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
-    try {
-      result
-    }
-    finally {
-      g.close
-      s.close
-    }
+    result
+    // g.close
+    // s.close
   }
 
   private def executeInceptionV5Graph = true
-  def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
+  def executeInceptionV5Graph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
     executePreTrainedGraph(graphDef, image, "input", "output")
   }
 
   private def executeInceptionV3Graph = true
-  def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
+  def executeInceptionV3Graph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
     executePreTrainedGraph(graphDef, image, "input_1", "predictions/Softmax")
   }
 
@@ -95,13 +93,9 @@ object LabelImageUtils {
           f"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape $rshapeString%s"))
     }
     val nlabels: Int = rshape(1).asInstanceOf[Int]
-    try {
-      result.copyTo(Array.ofDim[Float](1, nlabels))(0)
-    }
-    finally {
-      g.close
-      s.close
-    }
+    // g.close
+    // s.close
+    result.copyTo(Array.ofDim[Float](1, nlabels))(0)
   }
 
   private def maxIndex = true
@@ -184,8 +178,6 @@ object LabelImageUtils {
     }
     var meansTensor: Tensor = Tensor.create(meansArray)
     var stdsTensor: Tensor = Tensor.create(stdsArray)
-    val meansOutput: Output = b.constantTensor("means", meansTensor)
-    val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
 
     val output: Output =
       b.div(
@@ -193,23 +185,21 @@ object LabelImageUtils {
           b.expandDims(
             b.cast(input, DataType.FLOAT),
             b.constant("make_batch", 0)),
-          meansOutput),
-        stdsOutput)
-        b.constantTensor("means", meansTensor)),
-      b.constantTensor("scales", stdsTensor))
-
-    var s: Session = new Session(g)
+          b.constantTensor("means", meansTensor)),
+        b.constantTensor("stds", stdsTensor))
+    val s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
-    try {
-      result
-    }
-    finally {
-      g.close
-      imageTensor.close
-      meansTensor.close
-      stdsTensor.close
-      s.close
-    }
+    result
+    // try {
+    //   result
+    // }
+    // finally {
+    //   g.close
+    //   imageTensor.close
+    //   meansTensor.close
+    //   stdsTensor.close
+    //   s.close
+    // }
   }
 
   def getExperimentDir(runName: String): String = {
