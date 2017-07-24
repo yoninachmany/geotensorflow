@@ -15,16 +15,19 @@
 // limitations under the License.
 package demo
 
+// import ImageIOMultibandTile.convertToMultibandTile
+import geotrellis.raster._
 import geotrellis.raster.{Tile, MultibandTile}
 import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import org.tensorflow.{DataType, Graph, Output, Tensor}
+import spray.json._
+import DefaultJsonProtocol._
 
 import java.nio.ByteBuffer
+import java.nio.file.{Files, Path, Paths}
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
-import ImageIOMultibandTile.convertToMultibandTile
-
 // In the fullness of time, equivalents of the methods of this class should be auto-generated from
 // the OpDefs linked into libtensorflow_jni.so. That would match what is done in other languages
 // like Python, C++ and Go.
@@ -69,8 +72,7 @@ class GraphBuilder(g: Graph) {
   def getMultibandTileFromTif(imagePathString: String): MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile
 
   /**
-   * Decode a TIFF-encoded image to a uint8 tensor using GeoTrellis.
-   * TensorFlow Images: https://www.tensorflow.org/api_guides/python/image.
+   * Decode a JPEG-encoded (or Tiff-encoded) image to a uint8 tensor with a GeoTrellis MultibandTile.
    * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
    */
   def decodeWithMultibandTile(imagePathString: String): Tensor = {
@@ -98,6 +100,57 @@ class GraphBuilder(g: Graph) {
 
     val data: ByteBuffer = ByteBuffer.wrap(byteArray)
     val imageTensor: Tensor = Tensor.create(dataType, shape, data)
+    imageTensor
+  }
+
+  /**
+   * Decode and normamlize a JPEG-encoded (or Tiff-encoded) image to a uint8 tensor with a GeoTrellis MultibandTile.
+   * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
+   */
+  def decodeAndNormalizeWithMultibandTile(imagePathString: String): Tensor = {
+    // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
+    var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
+
+    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
+    val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
+    val planetKaggleDatasetPath = Paths.get(datasetDir, "planet_kaggle").toString()
+    val planetKaggleDatasetStatsPath = Paths.get(planetKaggleDatasetPath, "planet_kaggle_jpg_channel_stats.json").toString()
+    // Maybe repetitive open/read/close json pattern
+    val source: scala.io.Source = scala.io.Source.fromFile(planetKaggleDatasetStatsPath)
+    val lines: String = try source.mkString finally source.close
+    val stats: Map[String, Array[Double]] = lines.parseJson.convertTo[Map[String, Array[Double]]]
+    val means: Array[Double] = stats("means")
+    val stds: Array[Double] = stats("stds")
+
+    val normalized: MultibandTile =
+      tile.mapBands { (bandIndex, band) =>
+        (band.convert(DoubleConstantNoDataCellType) - means(bandIndex)) / stds(bandIndex)
+    }
+
+    tile.renderJpg.write("written_tile.jpg")
+
+    val dataType: DataType = DataType.UINT8
+    val height: Int = tile.rows
+    val width: Int = tile.cols
+    // TODO: HANDLE 4 channels!!
+    val channels: Int = 3 //tile.bandCount
+    val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
+    val byteArray: Array[Byte] = new Array(height * width * channels)
+    val doubleArray: Array[Array[Array[Array[Float]]]] = Array.ofDim[Float](1, height, width, channels)
+
+    var h: Int = 0
+    var w: Int = 0
+    var c: Int = 0
+    for (h <- 0 to height - 1) {
+      for (w <- 0 to width - 1) {
+        for (c <- 0 to channels - 1) {
+          doubleArray(0)(h)(w)(c) = normalized.band(c).getDouble(w, h).asInstanceOf[Float]
+        }
+      }
+    }
+
+    val data: ByteBuffer = ByteBuffer.wrap(byteArray)
+    val imageTensor: Tensor = Tensor.create(doubleArray)
     imageTensor
   }
 }
