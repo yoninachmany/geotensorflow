@@ -57,14 +57,23 @@ object LabelImageUtils {
         b.constant("scale", scale))
     var s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
-    s.close
-    g.close
-    result
+    try {
+      result
+    }
+    finally {
+      g.close
+      s.close
+    }
   }
 
-  private def executeInceptionGraph = true
+  private def executeInceptionV5Graph = true
   def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
     executePreTrainedGraph(graphDef, image, "input", "output")
+  }
+
+  private def executeInceptionV3Graph = true
+  def executeInceptionGraph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
+    executePreTrainedGraph(graphDef, image, "input_1", "predictions/Softmax")
   }
 
   private def executeRasterVisionTaggingGraph = true
@@ -78,8 +87,6 @@ object LabelImageUtils {
     g.importGraphDef(graphDef)
     var s: Session = new Session(g)
     var result: Tensor = s.runner().feed(inputOp, image).fetch(outputOp).run().get(0)
-    s.close
-    g.close
     val rshape: Array[Long] = result.shape
     val rshapeString: String = Arrays.toString(rshape)
     if (result.numDimensions != 2 || rshape(0) != 1) {
@@ -88,7 +95,13 @@ object LabelImageUtils {
           f"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape $rshapeString%s"))
     }
     val nlabels: Int = rshape(1).asInstanceOf[Int]
-    result.copyTo(Array.ofDim[Float](1, nlabels))(0)
+    try {
+      result.copyTo(Array.ofDim[Float](1, nlabels))(0)
+    }
+    finally {
+      g.close
+      s.close
+    }
   }
 
   private def maxIndex = true
@@ -130,6 +143,7 @@ object LabelImageUtils {
   }
 
   private def constructAndExecuteGraphToNormalizeRasterVisionImage = true
+  // def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
   def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
@@ -151,8 +165,7 @@ object LabelImageUtils {
     // have been more appropriate.
     var imageTensor: Tensor = b.decodeWithMultibandTile(imagePathString)
     val input: Output = b.constantTensor("input", imageTensor)
-    imageTensor.close
-
+    // val inputBytes: Output = b.constant("inputBytes", readAllBytesOrExit(Paths.get(imagePathString)))
     val shape: Array[Long] = imageTensor.shape
     val height: Int = shape(0).asInstanceOf[Int]
     val width: Int = shape(1).asInstanceOf[Int]
@@ -173,8 +186,6 @@ object LabelImageUtils {
     var stdsTensor: Tensor = Tensor.create(stdsArray)
     val meansOutput: Output = b.constantTensor("means", meansTensor)
     val stdsOutput: Output = b.constantTensor("stds", stdsTensor)
-    meansTensor.close
-    stdsTensor.close
 
     val output: Output =
       b.div(
@@ -184,12 +195,21 @@ object LabelImageUtils {
             b.constant("make_batch", 0)),
           meansOutput),
         stdsOutput)
+        b.constantTensor("means", meansTensor)),
+      b.constantTensor("scales", stdsTensor))
 
     var s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
-    s.close
-    g.close
-    result
+    try {
+      result
+    }
+    finally {
+      g.close
+      imageTensor.close
+      meansTensor.close
+      stdsTensor.close
+      s.close
+    }
   }
 
   def getExperimentDir(runName: String): String = {
