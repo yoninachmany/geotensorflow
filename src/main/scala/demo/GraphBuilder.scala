@@ -115,14 +115,7 @@ class GraphBuilder(g: Graph) {
     // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
     var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
 
-    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
-    val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
-    val planetKaggleDatasetPath = Paths.get(datasetDir, "planet_kaggle").toString()
-    val planetKaggleDatasetStatsPath = Paths.get(planetKaggleDatasetPath, "planet_kaggle_jpg_channel_stats.json").toString()
-    // Maybe repetitive open/read/close json pattern
-    val source: scala.io.Source = scala.io.Source.fromFile(planetKaggleDatasetStatsPath)
-    val lines: String = try source.mkString finally source.close
-    val stats: Map[String, Array[Double]] = lines.parseJson.convertTo[Map[String, Array[Double]]]
+    val stats: Map[String, Array[Double]] = RasterVisionUtils.getChannelStats
     val means: Array[Double] = stats("means")
     val stds: Array[Double] = stats("stds")
 

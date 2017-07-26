@@ -30,30 +30,34 @@ object RasterVisionUtils {
     LabelImageUtils.executePreTrainedGraph(graphDef, image, "input_1", "dense/Sigmoid")
   }
 
+  def getChannelStats: Map[String, Array[Double]] = {
+    // Task: normalize images using channel_stats.json file for the dataset
+    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
+    val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
+    val planetKaggleDatasetPath = Paths.get(datasetDir, "planet_kaggle").toString()
+    val planetKaggleDatasetStatsPath = Paths.get(planetKaggleDatasetPath, "planet_kaggle_jpg_channel_stats.json").toString()
+    val source: scala.io.Source = scala.io.Source.fromFile(planetKaggleDatasetStatsPath)
+    val lines: String = try source.mkString finally source.close
+    val stats: Map[String, Array[Double]] = lines.parseJson.convertTo[Map[String, Array[Double]]]
+    stats
+  }
+
   private def constructAndExecuteGraphToNormalizeRasterVisionImage = true
   // def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
   def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
-    // Task: normalize images using channel_stats.json file for the dataset
-    // Maybe repetitive/too many calls
-    val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
-    val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
-    val planetKaggleDatasetPath = Paths.get(datasetDir, "planet_kaggle").toString()
-    val planetKaggleDatasetStatsPath = Paths.get(planetKaggleDatasetPath, "planet_kaggle_jpg_channel_stats.json").toString()
-    // Maybe repetitive open/read/close json pattern
-    val source: scala.io.Source = scala.io.Source.fromFile(planetKaggleDatasetStatsPath)
-    val lines: String = try source.mkString finally source.close
-    val stats: Map[String, Array[Double]] = lines.parseJson.convertTo[Map[String, Array[Double]]]
-    val means: Array[Double] = stats("means")
-    val stds: Array[Double] = stats("stds")
 
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
     // have been more appropriate.
     var imageTensor: Tensor = b.decodeWithMultibandTile(imagePathString)
     val input: Output = b.constantTensor("input", imageTensor)
-    // val inputBytes: Output = b.constant("inputBytes", readAllBytesOrExit(Paths.get(imagePathString)))
+
+    // Task: normalize images using channel_stats.json file for the dataset
+    val stats: Map[String, Array[Double]] = getChannelStats
+    val means: Array[Double] = stats("means")
+    val stds: Array[Double] = stats("stds")
     val shape: Array[Long] = imageTensor.shape
     val height: Int = shape(0).asInstanceOf[Int]
     val width: Int = shape(1).asInstanceOf[Int]
