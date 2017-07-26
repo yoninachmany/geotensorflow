@@ -15,17 +15,15 @@
 // limitations under the License.
 package demo
 
-// import ImageIOMultibandTile.convertToMultibandTile
 import geotrellis.raster._
 import geotrellis.raster.{Tile, MultibandTile}
-import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import org.tensorflow.{DataType, Graph, Output, Tensor}
 import spray.json._
 import DefaultJsonProtocol._
 
 import java.nio.ByteBuffer
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Paths
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 // In the fullness of time, equivalents of the methods of this class should be auto-generated from
