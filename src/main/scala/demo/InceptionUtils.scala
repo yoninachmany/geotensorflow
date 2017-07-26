@@ -84,7 +84,7 @@ object InceptionUtils {
   }
 
   def printBestMatch(labelProbabilities: Array[Float], labels: List[String]) {
-    val bestLabelIdx: Int = maxIndex(labelProbabilities) //93//169//4
+    val bestLabelIdx: Int = maxIndex(labelProbabilities)
     val bestLabel: String = labels.get(bestLabelIdx)
     val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
     println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
