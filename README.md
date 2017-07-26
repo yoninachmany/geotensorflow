@@ -29,7 +29,7 @@ BEST MATCH: nematode (9.63% likely)
 Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions to setup and run experiments locally.
 
 ```console
-sbt "run-main demo.LabelImageRasterVision <run_name> train_1.jpg"
+sbt "run-main demo.LabelImageRasterVision tagging/7_17_17/resnet_transform/0 train_1.jpg"
 ```
 
 ![Kaggle image](train_1.jpg)
