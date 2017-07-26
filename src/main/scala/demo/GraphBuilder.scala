@@ -115,7 +115,7 @@ class GraphBuilder(g: Graph) {
     // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
     var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
 
-    val stats: Map[String, Array[Double]] = RasterVisionUtils.getChannelStats
+    val stats: Map[String, Array[Double]] = RasterVisionUtils.readChannelStats
     val means: Array[Double] = stats("means")
     val stds: Array[Double] = stats("stds")
 

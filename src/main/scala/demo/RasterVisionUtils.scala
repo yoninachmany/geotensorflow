@@ -30,7 +30,7 @@ object RasterVisionUtils {
     LabelImageUtils.executePreTrainedGraph(graphDef, image, "input_1", "dense/Sigmoid")
   }
 
-  def getChannelStats: Map[String, Array[Double]] = {
+  def readChannelStats: Map[String, Array[Double]] = {
     // Task: normalize images using channel_stats.json file for the dataset
     val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
     val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
@@ -55,7 +55,7 @@ object RasterVisionUtils {
     val input: Output = b.constantTensor("input", imageTensor)
 
     // Task: normalize images using channel_stats.json file for the dataset
-    val stats: Map[String, Array[Double]] = getChannelStats
+    val stats: Map[String, Array[Double]] = readChannelStats
     val means: Array[Double] = stats("means")
     val stds: Array[Double] = stats("stds")
     val shape: Array[Long] = imageTensor.shape
