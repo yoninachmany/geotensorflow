@@ -25,7 +25,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
 
 object InceptionUtils {
-  def constructAndExecuteGraphToNormalizeInceptionV5Image(imageBytes: Array[Byte]): Tensor = {
+  def constructAndExecuteGraphToNormalizeInceptionImage(imageBytes: Array[Byte], modelDir: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
 
@@ -35,10 +35,11 @@ object InceptionUtils {
     // - The model was trained with images scaled to 224x224 pixels.
     // - The colors, represented as R, G, B in 1-byte each were converted to
     //   float using (value - Mean)/Scale.
-    val H: Int = 224
-    val W: Int = 224
-    val mean: Float = 117f
-    val scale: Float = 1f
+    val isInception5h: Boolean = modelDir == "inception5h"
+    val H: Int = if (isInception5h) 224 else 299
+    val W: Int = if (isInception5h) 224 else 299
+    val mean: Float = if (isInception5h) 117f else 255
+    val scale: Float = if (isInception5h) 1f else 0
 
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
@@ -63,51 +64,11 @@ object InceptionUtils {
     // s.close
   }
 
-  def constructAndExecuteGraphToNormalizeInceptionV3Image(imageBytes: Array[Byte]): Tensor = {
-    var g: Graph = new Graph
-    val b: GraphBuilder = new GraphBuilder(g)
-
-    // Some constants specific to the pre-trained model at:
-    // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
-    //
-    // - The model was trained with images scaled to 224x224 pixels.
-    // - The colors, represented as R, G, B in 1-byte each were converted to
-    //   float using (value - Mean)/Scale.
-    // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/main.cc#L285-L288
-    val H: Int = 299
-    val W: Int = 299
-    val mean: Float = 0
-    val scale: Float = 255
-
-    // Since the graph is being constructed once per execution here, we can use a constant for the
-    // input image. If the graph were to be re-used for multiple input images, a placeholder would
-    // have been more appropriate.
-    val input: Output = b.constant("input", imageBytes)
-    val output: Output =
-      b.div(
-        b.sub(
-          b.resizeBilinear(
-          b.expandDims(
-            b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
-            b.constant("make_batch", 0)),
-          b.constant("size", Array[Int](H, W))),
-          b.constant("mean", mean)),
-        b.constant("scale", scale))
-
-    val s: Session = new Session(g)
-    return s.runner.fetch(output.op.name).run.get(0)
-    val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
-    result
-    // g.close
-    // s.close
-  }
-
-  def executeInceptionV5Graph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
-    LabelImageUtils.executePreTrainedGraph(graphDef, image, "input", "output")
-  }
-
-  def executeInceptionV3Graph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
-    LabelImageUtils.executePreTrainedGraph(graphDef, image, "input_1", "predictions/Softmax")
+  def executeInceptionGraph(graphDef: Array[Byte], image: Tensor, modelDir: String): Array[Float] = {
+    val isInception5h: Boolean = modelDir == "inception5h"
+    val inputOp: String = if (isInception5h) "input" else "input_1"
+    val outputOp: String = if (isInception5h) "output" else "predictions/Softmax"
+    LabelImageUtils.executePreTrainedGraph(graphDef, image, inputOp, outputOp)
   }
 
   private def maxIndex = true
