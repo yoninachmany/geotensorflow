@@ -31,7 +31,6 @@ object RasterVisionUtils {
   }
 
   def readChannelStats: Map[String, Array[Double]] = {
-    // Task: normalize images using channel_stats.json file for the dataset
     val rasterVisionDataDir = sys.env("RASTER_VISION_DATA_DIR")
     val datasetDir = Paths.get(rasterVisionDataDir, "datasets").toString()
     val planetKaggleDatasetPath = Paths.get(datasetDir, "planet_kaggle").toString()
@@ -43,7 +42,6 @@ object RasterVisionUtils {
   }
 
   private def constructAndExecuteGraphToNormalizeRasterVisionImage = true
-  // def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
   def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
