@@ -47,24 +47,28 @@ object LabelImageInception {
     val modelDir: String = args(0)
     val imageFile: String = args(1)
 
-    val graphDefFileName: String =
-      "tensorflow_inception_graph.pb"
-      //  "tensorflow_inception_graphv3.pb"
-    val graphDef: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(modelDir, graphDefFileName))
-    val labelsFileName: String =
-      "imagenet_comp_graph_label_strings.txt"
-      // "imagenet_comp_graph_label_stringsv3.txt"
-    val labels: List[String] = LabelImageUtils.readAllLinesOrExit(Paths.get(modelDir, labelsFileName))
+    val graphDef: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
+    // V3: https://www.quora.com/Where-can-I-find-the-semantic-labels-for-the-1000-ImageNet-ILSVRC2012-classes-codes
+    val labels: List[String] = LabelImageUtils.readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
     val imageBytes: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(imageFile));
 
-    var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionImage(imageBytes)
-    try {
-      val labelProbabilities: Array[Float] =
-        LabelImageUtils.executeInceptionV5Graph(graphDef, image)
-        // LabelImageUtils.executeInceptionV3Graph(graphDef, image)
-      LabelImageUtils.printBestMatch(labelProbabilities, labels)
-    } finally {
-      image.close
+    if (modelDir == "inception5h") {
+      var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionV5Image(imageBytes)
+      try {
+        val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionV5Graph(graphDef, image)
+        LabelImageUtils.printBestMatch(labelProbabilities, labels)
+      } finally {
+        image.close
+      }
+    }
+    else {
+      var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionV3Image(imageBytes)
+      try {
+        val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionV3Graph(graphDef, image)
+        LabelImageUtils.printBestMatch(labelProbabilities, labels)
+      } finally {
+        image.close
+      }
     }
   }
 }
