@@ -25,8 +25,8 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
 
 object LabelImageUtils {
-  private def constructAndExecuteGraphToNormalizeInceptionImage = true
-  def constructAndExecuteGraphToNormalizeInceptionImage(imageBytes: Array[Byte]): Tensor = {
+  private def constructAndExecuteGraphToNormalizeInceptionV5Image = true
+  def constructAndExecuteGraphToNormalizeInceptionV5Image(imageBytes: Array[Byte]): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
 
@@ -64,7 +64,47 @@ object LabelImageUtils {
     // s.close
   }
 
-  private def executeInceptionV5Graph = true
+  private def constructAndExecuteGraphToNormalizeInceptionV3Image = true
+  def constructAndExecuteGraphToNormalizeInceptionV3Image(imageBytes: Array[Byte]): Tensor = {
+    var g: Graph = new Graph
+    val b: GraphBuilder = new GraphBuilder(g)
+
+    // Some constants specific to the pre-trained model at:
+    // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
+    //
+    // - The model was trained with images scaled to 224x224 pixels.
+    // - The colors, represented as R, G, B in 1-byte each were converted to
+    //   float using (value - Mean)/Scale.
+    // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/main.cc#L285-L288
+    val H: Int = 299
+    val W: Int = 299
+    val mean: Float = 0
+    val scale: Float = 255
+
+    // Since the graph is being constructed once per execution here, we can use a constant for the
+    // input image. If the graph were to be re-used for multiple input images, a placeholder would
+    // have been more appropriate.
+    val input: Output = b.constant("input", imageBytes)
+    val output: Output =
+      b.div(
+        b.sub(
+          b.resizeBilinear(
+          b.expandDims(
+            b.cast(b.decodeJpeg(input, 3), DataType.FLOAT),
+            b.constant("make_batch", 0)),
+          b.constant("size", Array[Int](H, W))),
+          b.constant("mean", mean)),
+        b.constant("scale", scale))
+
+    val s: Session = new Session(g)
+    return s.runner.fetch(output.op.name).run.get(0)
+    val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
+    result
+    // g.close
+    // s.close
+  }
+
+  private def executeInceptionVv5Graph = true
   def executeInceptionV5Graph(graphDef: Array[Byte], image: Tensor): Array[Float] = {
     executePreTrainedGraph(graphDef, image, "input", "output")
   }
@@ -150,9 +190,9 @@ object LabelImageUtils {
     // Maybe repetitive open/read/close json pattern
     val source: scala.io.Source = scala.io.Source.fromFile(planetKaggleDatasetStatsPath)
     val lines: String = try source.mkString finally source.close
-    val stats: Map[String, Array[Float]] = lines.parseJson.convertTo[Map[String, Array[Float]]]
-    val means: Array[Float] = stats("means")
-    val stds: Array[Float] = stats("stds")
+    val stats: Map[String, Array[Double]] = lines.parseJson.convertTo[Map[String, Array[Double]]]
+    val means: Array[Double] = stats("means")
+    val stds: Array[Double] = stats("stds")
 
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
@@ -164,8 +204,8 @@ object LabelImageUtils {
     val height: Int = shape(0).asInstanceOf[Int]
     val width: Int = shape(1).asInstanceOf[Int]
     val channels: Int = shape(2).asInstanceOf[Int]
-    val meansArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
-    val stdsArray: Array[Array[Array[Float]]] = Array.ofDim(height, width, channels)
+    val meansArray: Array[Array[Array[Double]]] = Array.ofDim(height, width, channels)
+    val stdsArray: Array[Array[Array[Double]]] = Array.ofDim(height, width, channels)
 
     // build 3D matrices where each 2D layer is ones(height, width) * the respective channel statistic
     for (h <- 0 to height - 1) {
@@ -176,17 +216,52 @@ object LabelImageUtils {
          }
        }
     }
+
     var meansTensor: Tensor = Tensor.create(meansArray)
     var stdsTensor: Tensor = Tensor.create(stdsArray)
 
     val output: Output =
-      b.div(
-        b.sub(
-          b.expandDims(
-            b.cast(input, DataType.FLOAT),
-            b.constant("make_batch", 0)),
-          b.constantTensor("means", meansTensor)),
-        b.constantTensor("stds", stdsTensor))
+      b.castFloat(
+        b.div(
+          b.sub(
+            b.expandDims(
+              b.cast(input, DataType.DOUBLE),
+              b.constant("make_batch", 0)),
+            b.constantTensor("means", meansTensor)),
+          b.constantTensor("stds", stdsTensor)))
+    val s: Session = new Session(g)
+    val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
+    result
+    // try {
+    //   result
+    // }
+    // finally {
+    //   g.close
+    //   imageTensor.close
+    //   meansTensor.close
+    //   stdsTensor.close
+    //   s.close
+    // }
+  }
+
+  private def constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage = true
+  // def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
+  def constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString: String): Tensor = {
+    var g: Graph = new Graph
+    val b: GraphBuilder = new GraphBuilder(g)
+    // Task: normalize images using channel_stats.json file for the dataset
+    // Maybe repetitive/too many calls
+    // Since the graph is being constructed once per execution here, we can use a constant for the
+    // input image. If the graph were to be re-used for multiple input images, a placeholder would
+    // have been more appropriate.
+    var imageTensor: Tensor = b.decodeAndNormalizeWithMultibandTile(imagePathString)
+    val input: Output = b.constantTensor("input", imageTensor)
+    val shape: Array[Long] = imageTensor.shape
+
+    val output: Output =
+        b.expandDims(
+          b.cast(input, DataType.FLOAT),
+          b.constant("make_batch", 0))
     val s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
     result
@@ -211,15 +286,11 @@ object LabelImageUtils {
   }
 
   def getGraphPath(runName: String): Path = {
-    val experimentDir = getExperimentDir(runName)
-
-    // Convention from code that writes frozen graph to experiment directory.
-    val graphName = runName.replace('/', '_') + "_graph.pb"
-    Paths.get(experimentDir, graphName)
+    Paths.get(getExperimentDir(runName), "output_graph.pb")
   }
 
   def printBestMatch(labelProbabilities: Array[Float], labels: List[String]) {
-    val bestLabelIdx: Int = LabelImageUtils.maxIndex(labelProbabilities)
+    val bestLabelIdx: Int = LabelImageUtils.maxIndex(labelProbabilities) //93//169//4
     val bestLabel: String = labels.get(bestLabelIdx)
     val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
     println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
@@ -247,9 +318,9 @@ object LabelImageUtils {
       val labelProbability: Float = labelProbabilities(i) * 100f
       val threshold: Float = thresholds(i) * 100f
       val label: String = labels.get(i)
-      if (labelProbability >= threshold) {
-        println(f"MATCH: $label%s ($labelProbability%.2f%% likely)")
-      }
+      // if (labelProbability >= threshold) {
+        println(f"MATCH: $label%15s $labelProbability%15.2f%% likely $threshold%15.2f%% likely")
+      // }
     }
   }
 }
