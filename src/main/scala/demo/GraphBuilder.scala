@@ -42,6 +42,10 @@ class GraphBuilder(g: Graph) {
     g.opBuilder("Cast", "Cast").addInput(value).setAttr("DstT", dtype).build.output(0)
   }
 
+  def castFloat(value: Output): Output = {
+    g.opBuilder("Cast", "CastFloat").addInput(value).setAttr("DstT", DataType.FLOAT).build.output(0)
+  }
+
   def decodeJpeg(contents: Output, channels: Long): Output = {
     g.opBuilder("DecodeJpeg", "DecodeJpeg").addInput(contents).setAttr("channels", channels).build.output(0);
   }
@@ -64,7 +68,7 @@ class GraphBuilder(g: Graph) {
 
   private def getMultibandTileFromJpg = true
   def getMultibandTileFromJpg(imagePathString: String): MultibandTile = {
-    val image: BufferedImage = ImageIO.read(new java.io.File(imagePathString));
+    val image: BufferedImage = ImageIO.read(new java.io.File(imagePathString))
     ImageIOMultibandTile.convertToMultibandTile(image)
   }
 
@@ -86,6 +90,7 @@ class GraphBuilder(g: Graph) {
     val channels: Int = 3 //tile.bandCount
     val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
     val byteArray: Array[Byte] = new Array(height * width * channels)
+    val doubleArray: Array[Array[Array[Double]]] = Array.ofDim[Double](height, width, channels)
 
     var h: Int = 0
     var w: Int = 0
@@ -94,6 +99,7 @@ class GraphBuilder(g: Graph) {
       for (w <- 0 to width - 1) {
         for (c <- 0 to channels - 1) {
           byteArray(h * (width * channels) + w * channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
+          doubleArray(h)(w)(c) = tile.band(c).getDouble(w, h).asInstanceOf[Double]
         }
       }
     }
@@ -136,7 +142,7 @@ class GraphBuilder(g: Graph) {
     val channels: Int = 3 //tile.bandCount
     val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
     val byteArray: Array[Byte] = new Array(height * width * channels)
-    val doubleArray: Array[Array[Array[Array[Float]]]] = Array.ofDim[Float](1, height, width, channels)
+    val doubleArray: Array[Array[Array[Double]]] = Array.ofDim[Double](height, width, channels)
 
     var h: Int = 0
     var w: Int = 0
@@ -144,7 +150,7 @@ class GraphBuilder(g: Graph) {
     for (h <- 0 to height - 1) {
       for (w <- 0 to width - 1) {
         for (c <- 0 to channels - 1) {
-          doubleArray(0)(h)(w)(c) = normalized.band(c).getDouble(w, h).asInstanceOf[Float]
+          doubleArray(h)(w)(c) = normalized.band(c).getDouble(w, h).asInstanceOf[Double]
         }
       }
     }
