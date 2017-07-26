@@ -53,19 +53,19 @@ object LabelImageInception {
     val imageBytes: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(imageFile));
 
     if (modelDir == "inception5h") {
-      var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionV5Image(imageBytes)
+      var image: Tensor = InceptionUtils.constructAndExecuteGraphToNormalizeInceptionV5Image(imageBytes)
       try {
-        val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionV5Graph(graphDef, image)
-        LabelImageUtils.printBestMatch(labelProbabilities, labels)
+        val labelProbabilities: Array[Float] = InceptionUtils.executeInceptionV5Graph(graphDef, image)
+        InceptionUtils.printBestMatch(labelProbabilities, labels)
       } finally {
         image.close
       }
     }
     else {
-      var image: Tensor = LabelImageUtils.constructAndExecuteGraphToNormalizeInceptionV3Image(imageBytes)
+      var image: Tensor = InceptionUtils.constructAndExecuteGraphToNormalizeInceptionV3Image(imageBytes)
       try {
-        val labelProbabilities: Array[Float] = LabelImageUtils.executeInceptionV3Graph(graphDef, image)
-        LabelImageUtils.printBestMatch(labelProbabilities, labels)
+        val labelProbabilities: Array[Float] = InceptionUtils.executeInceptionV3Graph(graphDef, image)
+        InceptionUtils.printBestMatch(labelProbabilities, labels)
       } finally {
         image.close
       }
