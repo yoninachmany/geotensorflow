@@ -49,7 +49,7 @@ object RasterVisionUtils {
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
     // have been more appropriate.
-    var imageTensor: Tensor = b.decodeJpegWithMultibandTile(imagePathString)
+    var imageTensor: Tensor = b.decodeJpegGeoTrellis(imagePathString)
     val input: Output = b.constantTensor("input", imageTensor)
 
     // Task: normalize images using channel_stats.json file for the dataset
@@ -110,7 +110,7 @@ object RasterVisionUtils {
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
     // have been more appropriate.
-    var imageTensor: Tensor = b.decodeAndNormalizeJpegWithMultibandTile(imagePathString)
+    var imageTensor: Tensor = b.decodeAndNormalizeJpegGeoTrellis(imagePathString)
     val input: Output = b.constantTensor("input", imageTensor)
     val shape: Array[Long] = imageTensor.shape
 

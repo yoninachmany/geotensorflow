@@ -67,21 +67,13 @@ class GraphBuilder(g: Graph) {
     ImageIOMultibandTile.convertToMultibandTile(image)
   }
 
-  /**
-   * Decode a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
-   * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
-   */
-  def decodeJpegWithMultibandTile(imagePathString: String): Tensor = {
-    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
-
-    val dataType: DataType = DataType.UINT8
+  private def decodeMultibandTile = true
+  def decodeMultibandTile(tile: MultibandTile): Tensor = {
     val height: Int = tile.rows
     val width: Int = tile.cols
     // TODO: HANDLE 4 channels!!
     val channels: Int = 3 //tile.bandCount
-    val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
-    val byteArray: Array[Byte] = new Array(height * width * channels)
-    val doubleArray: Array[Array[Array[Double]]] = Array.ofDim[Double](height, width, channels)
+    val imageData: Array[Array[Array[Int]]] = Array.ofDim[Int](height, width, channels)
 
     var h: Int = 0
     var w: Int = 0
@@ -89,24 +81,25 @@ class GraphBuilder(g: Graph) {
     for (h <- 0 to height - 1) {
       for (w <- 0 to width - 1) {
         for (c <- 0 to channels - 1) {
-          byteArray(h * (width * channels) + w * channels + c) = (tile.band(c).get(w, h)).asInstanceOf[Byte]
-          doubleArray(h)(w)(c) = tile.band(c).getDouble(w, h).asInstanceOf[Double]
+          imageData(h)(w)(c) = tile.band(c).get(w, h)
         }
       }
     }
-
-    val data: ByteBuffer = ByteBuffer.wrap(byteArray)
-    val imageTensor: Tensor = Tensor.create(dataType, shape, data)
+    val imageTensor: Tensor = Tensor.create(imageData)
     imageTensor
   }
 
   /**
-   * Decode and normalize a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
+   * Decode a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
    * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
    */
-  def decodeAndNormalizeJpegWithMultibandTile(imagePathString: String): Tensor = {
-    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
+  def decodeJpegGeoTrellis(imagePathString: String): Tensor = {
+    val tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
+    decodeMultibandTile(tile)
+  }
 
+  private def normalizeMultibandTile = true
+  def normalizeMultibandTile(tile: MultibandTile): MultibandTile = {
     val stats: Map[String, Array[Double]] = RasterVisionUtils.readChannelStats
     val means: Array[Double] = stats("means")
     val stds: Array[Double] = stats("stds")
@@ -114,32 +107,17 @@ class GraphBuilder(g: Graph) {
     val normalized: MultibandTile =
       tile.mapBands { (bandIndex, band) =>
         (band.convert(DoubleConstantNoDataCellType) - means(bandIndex)) / stds(bandIndex)
-    }
-
-    tile.renderJpg.write("written_tile.jpg")
-
-    val dataType: DataType = DataType.UINT8
-    val height: Int = tile.rows
-    val width: Int = tile.cols
-    // TODO: HANDLE 4 channels!!
-    val channels: Int = 3 //tile.bandCount
-    val shape: Array[Long] = Array(height.asInstanceOf[Long], width.asInstanceOf[Long], channels.asInstanceOf[Long])
-    val byteArray: Array[Byte] = new Array(height * width * channels)
-    val doubleArray: Array[Array[Array[Double]]] = Array.ofDim[Double](height, width, channels)
-
-    var h: Int = 0
-    var w: Int = 0
-    var c: Int = 0
-    for (h <- 0 to height - 1) {
-      for (w <- 0 to width - 1) {
-        for (c <- 0 to channels - 1) {
-          doubleArray(h)(w)(c) = normalized.band(c).getDouble(w, h).asInstanceOf[Double]
-        }
       }
-    }
+    normalized
+  }
 
-    val data: ByteBuffer = ByteBuffer.wrap(byteArray)
-    val imageTensor: Tensor = Tensor.create(doubleArray)
-    imageTensor
+  /**
+   * Decode and normalize a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
+   * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
+   */
+  def decodeAndNormalizeJpegGeoTrellis(imagePathString: String): Tensor = {
+    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
+    val normalized: MultibandTile = normalizeMultibandTile(tile)
+    decodeMultibandTile(normalized)
   }
 }
