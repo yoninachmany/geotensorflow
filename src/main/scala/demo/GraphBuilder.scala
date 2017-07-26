@@ -61,25 +61,18 @@ class GraphBuilder(g: Graph) {
   // Added
   def constantTensor(name: String, t: Tensor): Output = g.opBuilder("Const", name).setAttr("dtype", t.dataType).setAttr("value", t).build.output(0)
 
-  private def isJpg = true
-  def isJpg(imagePathString: String): Boolean = imagePathString.indexOfSlice("jpg") != -1 || imagePathString.indexOfSlice("jpg") != -1
-
-  private def getMultibandTileFromJpg = true
-  def getMultibandTileFromJpg(imagePathString: String): MultibandTile = {
+  private def getMultibandTileFromJpeg = true
+  def getMultibandTileFromJpeg(imagePathString: String): MultibandTile = {
     val image: BufferedImage = ImageIO.read(new java.io.File(imagePathString))
     ImageIOMultibandTile.convertToMultibandTile(image)
   }
 
-  private def getMultibandTileFromTif = true
-  def getMultibandTileFromTif(imagePathString: String): MultibandTile = GeoTiffReader.readMultiband(imagePathString).tile
-
   /**
-   * Decode a JPEG-encoded (or Tiff-encoded) image to a uint8 tensor with a GeoTrellis MultibandTile.
+   * Decode a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
    * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
    */
-  def decodeWithMultibandTile(imagePathString: String): Tensor = {
-    // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-    var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
+  def decodeJpegWithMultibandTile(imagePathString: String): Tensor = {
+    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
 
     val dataType: DataType = DataType.UINT8
     val height: Int = tile.rows
@@ -108,12 +101,11 @@ class GraphBuilder(g: Graph) {
   }
 
   /**
-   * Decode and normamlize a JPEG-encoded (or Tiff-encoded) image to a uint8 tensor with a GeoTrellis MultibandTile.
+   * Decode and normalize a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
    * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
    */
-  def decodeAndNormalizeWithMultibandTile(imagePathString: String): Tensor = {
-    // Read GeoTiff: https://geotrellis.readthedocs.io/en/latest/tutorials/reading-geoTiffs.html
-    var tile: MultibandTile = if (isJpg(imagePathString)) getMultibandTileFromJpg(imagePathString) else getMultibandTileFromTif(imagePathString)
+  def decodeAndNormalizeJpegWithMultibandTile(imagePathString: String): Tensor = {
+    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
 
     val stats: Map[String, Array[Double]] = RasterVisionUtils.readChannelStats
     val means: Array[Double] = stats("means")
