@@ -64,7 +64,12 @@ class GraphBuilder(g: Graph) {
   private def getMultibandTileFromJpeg = true
   def getMultibandTileFromJpeg(imagePathString: String): MultibandTile = {
     val image: BufferedImage = ImageIO.read(new java.io.File(imagePathString))
-    ImageIOMultibandTile.convertToMultibandTile(image)
+    val mbt = ImageIOMultibandTile.convertToMultibandTile(image)
+    import geotrellis.raster.io.geotiff._
+    import geotrellis.vector._
+    import geotrellis.proj4._
+    GeoTiff(mbt, Extent(0,0,1,1), LatLng).write("not_normalized_reversed.tiff")
+    mbt
   }
 
   private def decodeMultibandTile = true
