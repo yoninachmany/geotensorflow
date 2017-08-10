@@ -68,7 +68,7 @@ class GraphBuilder(g: Graph) {
     import geotrellis.raster.io.geotiff._
     import geotrellis.vector._
     import geotrellis.proj4._
-    GeoTiff(mbt, Extent(0,0,1,1), LatLng).write("not_normalized_reversed.tiff")
+    GeoTiff(mbt, Extent(0,0,1,1), LatLng).write("reversed.tiff")
     mbt
   }
 
