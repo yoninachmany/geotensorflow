@@ -101,7 +101,6 @@ object RasterVisionUtils {
   }
 
   private def constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage = true
-  // def constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString: String): Tensor = {
   def constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
