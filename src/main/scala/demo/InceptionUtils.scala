@@ -38,8 +38,8 @@ object InceptionUtils {
     val isInception5h: Boolean = modelDir == "inception5h"
     val H: Int = if (isInception5h) 224 else 299
     val W: Int = if (isInception5h) 224 else 299
-    val mean: Float = if (isInception5h) 117f else 255
-    val scale: Float = if (isInception5h) 1f else 0
+    val mean: Float = if (isInception5h) 117f else 0
+    val scale: Float = if (isInception5h) 1f else 255
 
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
@@ -88,5 +88,15 @@ object InceptionUtils {
     val bestLabel: String = labels.get(bestLabelIdx)
     val bestLabelLikelihood: Float = labelProbabilities(bestLabelIdx) * 100f
     println(f"BEST MATCH: $bestLabel%s ($bestLabelLikelihood%.2f%% likely)")
+  }
+
+  def getGraphPath(modelDir: String): Path = {
+    val graphFilename: String = if (modelDir == "inception3") "inception_v3_2016_08_28_frozen.pb" else "tensorflow_inception_graph.pb"
+    Paths.get(modelDir, graphFilename)
+  }
+
+  def getLabelsPath(modelDir: String): Path = {
+    val labelsFilename: String = if (modelDir == "inception3") "imagenet_slim_labels.txt" else "imagenet_comp_graph_label_strings.txt"
+    Paths.get(modelDir, labelsFilename)
   }
 }

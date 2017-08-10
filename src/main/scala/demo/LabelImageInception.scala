@@ -47,9 +47,8 @@ object LabelImageInception {
     val modelDir: String = args(0)
     val imageFile: String = args(1)
 
-    val graphDef: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"))
-    // V3: https://www.quora.com/Where-can-I-find-the-semantic-labels-for-the-1000-ImageNet-ILSVRC2012-classes-codes
-    val labels: List[String] = LabelImageUtils.readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"))
+    val graphDef: Array[Byte] = LabelImageUtils.readAllBytesOrExit(InceptionUtils.getGraphPath(modelDir))
+    val labels: List[String] = LabelImageUtils.readAllLinesOrExit(InceptionUtils.getLabelsPath(modelDir))
     val imageBytes: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(imageFile));
 
     var image: Tensor = InceptionUtils.constructAndExecuteGraphToNormalizeInceptionImage(imageBytes, modelDir)
