@@ -104,8 +104,7 @@ object RasterVisionUtils {
   def constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
-    // Task: normalize images using channel_stats.json file for the dataset
-    // Maybe repetitive/too many calls
+
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
     // have been more appropriate.
