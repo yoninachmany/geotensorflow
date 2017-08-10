@@ -49,7 +49,7 @@ object LabelImageRasterVision {
     val imagePathString: String = Paths.get(imageFile).toString
 
     var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString)
-    var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString)
+    // var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString)
     try {
       val labelProbabilities: Array[Float] = RasterVisionUtils.executeRasterVisionTaggingGraph(graphDef, image)
       RasterVisionUtils.printMatches(runName, labelProbabilities, labels)
