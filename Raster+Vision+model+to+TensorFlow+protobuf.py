@@ -119,7 +119,7 @@ inception_test_augmentation_false_run_name = "tagging/7_18_17/inception/sgd"
 tiff_pre_test_augmentation_run_name = "tagging/6_19_17/RGBtiff"
 test_augmentation_run_name = "tagging/7_17_17/resnet_transform/0"
 jpg_pre_test_augmentation_run_name = "tagging/7_3_17/baseline-branch-tiffdrop"
-run_name = jpg_pre_test_augmentation_run_name
+run_name = test_augmentation_run_name
 
 raster_vision_data_path = os.environ.get("RASTER_VISION_DATA_DIRECTORY", None) or "/opt/data"
 results_path = os.path.join(raster_vision_data_path, "results")
@@ -132,7 +132,7 @@ with open(os.path.join(run_path, "options.json")) as file:
 # https://keras.io/backend/
 from keras import backend as K
 K.set_learning_phase(0) # test
-model = load_model(run_path, options, use_best=False)
+model = load_model(run_path, options, use_best=True)
 # to test with vanilla inceptionv3 model
 # from keras.applications.inception_v3 import InceptionV3
 # model = InceptionV3()
