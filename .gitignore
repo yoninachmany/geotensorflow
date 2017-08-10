@@ -30,4 +30,6 @@ _SUCCESS
 .vagrant
 *.class
 
+inception3/
+inception3-homemade/
 inception5h/
