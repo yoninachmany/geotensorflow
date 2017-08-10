@@ -112,10 +112,15 @@ object RasterVisionUtils {
     val input: Output = b.constantTensor("input", imageTensor)
     val shape: Array[Long] = imageTensor.shape
 
+    val H: Int = 224
+    val W: Int = 224
+
     val output: Output =
+        b.resizeBilinear(
         b.expandDims(
           b.cast(input, DataType.FLOAT),
-          b.constant("make_batch", 0))
+          b.constant("make_batch", 0)),
+          b.constant("size", Array[Int](H, W)))
     val s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
     result
