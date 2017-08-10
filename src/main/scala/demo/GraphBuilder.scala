@@ -68,7 +68,7 @@ class GraphBuilder(g: Graph) {
     import geotrellis.raster.io.geotiff._
     import geotrellis.vector._
     import geotrellis.proj4._
-    GeoTiff(mbt, Extent(0,0,1,1), LatLng).write("not_normalized_reversed.tiff")
+    GeoTiff(mbt, Extent(0,0,1,1), LatLng).write("panda.tiff")
     mbt
   }
 
@@ -105,9 +105,9 @@ class GraphBuilder(g: Graph) {
 
   private def normalizeMultibandTile = true
   def normalizeMultibandTile(tile: MultibandTile): MultibandTile = {
-    val stats: Map[String, Array[Double]] = RasterVisionUtils.readChannelStats
-    val means: Array[Double] = stats("means")
-    val stds: Array[Double] = stats("stds")
+    // val stats: Map[String, Array[Double]] = RasterVisionUtils.readChannelStats
+    val means: Array[Double] = Array(117.0, 117.0, 117.0)//stats("means")
+    val stds: Array[Double] = Array(1.0, 1.0, 1.0)//stats("stds")
 
     val normalized: MultibandTile =
       tile.mapBands { (bandIndex, band) =>
