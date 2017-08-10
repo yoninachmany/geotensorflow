@@ -115,7 +115,12 @@ def load_model(run_path, options, use_best=True):
 
 
 import os
-run_name = "tagging/7_17_17/resnet_transform/0"
+inception_test_augmentation_false_run_name = "tagging/7_18_17/inception/sgd"
+tiff_pre_test_augmentation_run_name = "tagging/6_19_17/RGBtiff"
+test_augmentation_run_name = "tagging/7_17_17/resnet_transform/0"
+jpg_pre_test_augmentation_run_name = "tagging/7_3_17/baseline-branch-tiffdrop"
+run_name = test_augmentation_run_name
+
 raster_vision_data_path = os.environ.get("RASTER_VISION_DATA_DIRECTORY", None) or "/opt/data"
 results_path = os.path.join(raster_vision_data_path, "results")
 run_path = os.path.join(results_path, run_name)
@@ -124,13 +129,28 @@ import json
 with open(os.path.join(run_path, "options.json")) as file:
     options = json.load(file)
 
-model = load_model(run_path, options)
-model.summary()
+# https://keras.io/backend/
+from keras import backend as K
+K.set_learning_phase(0) # test
+model = load_model(run_path, options, use_best=True)
+# to test with vanilla inceptionv3 model
+# from keras.applications.inception_v3 import InceptionV3
+# model = InceptionV3()
+
+print(model.inputs)
+print(model.outputs)
+
+
+# In[7]:
+
+
+output_node_tensor_name = model.outputs[0].name
+output_node_name = output_node_tensor_name[0:output_node_tensor_name.index(":")]
 
 
 # # Freeze model to protobuf
 
-# In[7]:
+# In[8]:
 
 
 # Background: https://www.tensorflow.org/extend/tool_developers/#freezing
@@ -140,43 +160,53 @@ from tensorflow.python.framework import graph_io
 from tensorflow.python.tools import freeze_graph
 from tensorflow.python.training import saver as saver_lib
 
-temp_dir = os.path.join(os.getcwd(), "temp")
-if not os.path.exists(temp_dir):
-    os.makedirs(temp_dir)
-checkpoint_prefix = os.path.join(temp_dir, "saved_checkpoint")
-checkpoint_state_name = "checkpoint_state"
-input_graph_name = "input_graph.pb"
-output_graph_name = "output_graph.pb"
+def testFreezeGraph():
+    temp_dir = os.path.join(os.getcwd(), "temp")
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    checkpoint_prefix = os.path.join(temp_dir, "saved_checkpoint")
+    checkpoint_state_name = "checkpoint_state"
+    input_graph_name = "input_graph.pb"
+    output_graph_name = "output_graph.pb"
 
-# https://keras.io/backend/
-from keras import backend as K
-sess = K.get_session()
-saver = saver_lib.Saver(write_version=saver_pb2.SaverDef.V2)
-checkpoint_path = saver.save(
-    sess,
-    checkpoint_prefix,
-    global_step=0,
-    latest_filename=checkpoint_state_name)
-graph_io.write_graph(sess.graph, temp_dir, input_graph_name)
+    with K.get_session() as sess:
+        saver = saver_lib.Saver(write_version=saver_pb2.SaverDef.V2)
+        checkpoint_path = saver.save(
+            sess,
+            checkpoint_prefix,
+            global_step=0,
+            latest_filename=checkpoint_state_name)
+        graph_io.write_graph(sess.graph, temp_dir, input_graph_name)
+
+    # We save out the graph to disk, and then call the const conversion
+    # routine.
+    input_graph_path = os.path.join(temp_dir, input_graph_name)
+    input_saver_def_path = ""
+    input_binary = False
+    output_node_names = output_node_name
+    restore_op_name = "save/restore_all"
+    filename_tensor_name = "save/Const:0"
+    # Only write the output graph to the run_path
+    output_graph_path = os.path.join(run_path, output_graph_name)
+    clear_devices = False
+
+    freeze_graph.freeze_graph(input_graph_path, input_saver_def_path,
+                              input_binary, checkpoint_path, output_node_names,
+                              restore_op_name, filename_tensor_name,
+                              output_graph_path, clear_devices, "")
+
+    import shutil
+    shutil.rmtree(temp_dir)
 
 
-# We save out the graph to disk, and then call the const conversion
-# routine.
-input_graph_path = os.path.join(temp_dir, input_graph_name)
-input_saver_def_path = ""
-input_binary = False
-output_node_names = "dense/Sigmoid"
-restore_op_name = "save/restore_all"
-filename_tensor_name = "save/Const:0"
-# Only write the output graph to the run_path
-output_graph_path = os.path.join(run_path, output_graph_name)
-clear_devices = False
+# In[9]:
 
-freeze_graph.freeze_graph(input_graph_path, input_saver_def_path,
-                          input_binary, checkpoint_path, output_node_names,
-                          restore_op_name, filename_tensor_name,
-                          output_graph_path, clear_devices, "")
 
-import shutil
-shutil.rmtree(temp_dir)
+testFreezeGraph()
+
+
+# In[ ]:
+
+
+
 
