@@ -48,8 +48,8 @@ object LabelImageRasterVision {
     val labels: List[String] = LabelImageUtils.readAllLinesOrExit(Paths.get("planet_kaggle_label_strings.txt"))
     val imagePathString: String = Paths.get(imageFile).toString
 
+    var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString)
     var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeRasterVisionImage(imagePathString)
-    // var image: Tensor = RasterVisionUtils.constructAndExecuteGraphToNormalizeInGeoTrellisRasterVisionImage(imagePathString)
     try {
       val labelProbabilities: Array[Float] = RasterVisionUtils.executeRasterVisionTaggingGraph(graphDef, image)
       RasterVisionUtils.printMatches(runName, labelProbabilities, labels)
