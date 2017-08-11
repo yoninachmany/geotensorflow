@@ -1,7 +1,9 @@
 GeoTensorFlow
 =======================
 
-## Goal: label training image from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle)
+## Opportunity: integrate [Raster Vision] trained model predictions with [GeoTrellis](https://geotrellis.io/)
+
+## Demo: label image chip from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle)
 
 ![Kaggle image](train_1.jpg)
 
