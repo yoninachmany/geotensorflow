@@ -1,28 +1,81 @@
 GeoTensorFlow
 =======================
 
-## Goal: label training image from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle)
-
-![Kaggle image](train_1.jpg)
-
-```
-agriculture clear primary water
-```
-
-## Inception baseline
+## Initial setup
 
 ```console
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
-(./inception5h/download.sh)
+./inception5h/download.sh
+```
+
+## Run Inception v5 baseline (using provided [frozen graph](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L37) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
+
+```console
+sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
+
+BEST MATCH: giant panda (95.23% likely)
+```
+
+![cropped panda](cropped_panda.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
+
+BEST MATCH: military uniform (28.92% likely)
+```
+
+![grace hopper](grace_hopper.jpg)
+
+```console
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
-```
 
-![Kaggle image](train_1.jpg)
-
-```
 BEST MATCH: nematode (9.63% likely)
 ```
+
+![train 1](train_1.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
+
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 10000](train_10000.jpg)
+
+## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb) and [finding normalization stats](https://www.quora.com/Where-can-I-find-the-semantic-labels-for-the-1000-ImageNet-ILSVRC2012-classes-codes)) 
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
+
+BEST MATCH: giant panda (95.23% likely)
+```
+
+![cropped panda](cropped_panda.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade grace_hopper.jpg"
+
+BEST MATCH: military uniform (28.92% likely)
+```
+
+![grace hopper](grace_hopper.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade train_1.jpg"
+
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 1](train_1.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade train_10000.jpg"
+
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 10000](train_10000.jpg)
 
 ## Improve with Raster Vision
 
