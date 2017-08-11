@@ -7,6 +7,7 @@ GeoTensorFlow
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
 ./inception5h/download.sh
+./inception3/download.sh
 ```
 
 ## Run Inception v5 baseline (using provided [frozen graph](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L37) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
