@@ -43,7 +43,43 @@ BEST MATCH: nematode (9.63% likely)
 
 ![train 10000](train_10000.jpg)
 
-## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb) and [finding normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/examples/label_image/main.cc#L250-L251)) 
+## Run Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
+
+TLDR: different model, different results
+
+```console
+sbt "run-main demo.LabelImageInception inception3 cropped_panda.jpg"
+
+BEST MATCH: giant panda (81.60% likely)
+```
+
+![cropped panda](cropped_panda.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3 grace_hopper.jpg"
+
+BEST MATCH: military uniform (87.42% likely)
+```
+
+![grace hopper](grace_hopper.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3 train_1.jpg"
+
+BEST MATCH: nematode (2.16% likely)
+```
+
+![train 1](train_1.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3 train_10000.jpg"
+
+BEST MATCH: nematode (2.16% likely)
+```
+
+![train 10000](train_10000.jpg)
+
+## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
