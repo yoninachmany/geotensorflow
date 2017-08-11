@@ -6,7 +6,7 @@ GeoTensorFlow
 ```console
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
-(./inception5h/download.sh)
+./inception5h/download.sh
 ```
 
 ## Run Inception baseline (normalizing images with Inception stats)
