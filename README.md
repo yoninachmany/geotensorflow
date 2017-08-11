@@ -1,35 +1,28 @@
 GeoTensorFlow
 =======================
 
-## Opportunity
+## Goal: predict labels on rasters processed by [GeoTrellis](https://geotrellis.io/) with pretrained [Raster Vision](https://github.com/azavea/raster-vision) models
 
-### Integrate [Raster Vision](https://github.com/azavea/raster-vision) trained model predictions with [GeoTrellis](https://geotrellis.io/)
-
-## Demo
-
-### Label jpg image chip from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) read through GeoTrellis MultibandTile using Raster Vision model, stored in [protobuf](https://www.tensorflow.org/extend/tool_developers/#freezing)
-
-## Starting point
-
-### [tensorflow/LabelImage.java](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java)
-
-
-![Kaggle image](train_1.jpg)
-
-```
-agriculture clear primary water
-```
-
-## Inception baseline
+## Demo: improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis
 
 ```console
 git clone https://github.com/yoninachmany/geotensorflow.git
 cd geotensorflow
 (./inception5h/download.sh)
+sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
+```
+
+![Regular image](cropped_panda.jpg)
+
+```
+BEST MATCH: giant panda (95.23% likely)
+```
+
+```console
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 ```
 
-![Kaggle image](train_1.jpg)
+![Satellite image](train_1.jpg)
 
 ```
 BEST MATCH: nematode (9.63% likely)
