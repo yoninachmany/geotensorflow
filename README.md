@@ -1,19 +1,6 @@
 GeoTensorFlow
 =======================
 
-## Demo: Improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis(https://github.com/azavea/raster-vision) models
-
-![Regular image](cropped_panda.jpg)
-```
-BEST MATCH: giant panda (95.23% likely)
-```
-
-![Satellite image](train_1.jpg)
-
-```
-BEST MATCH: nematode (9.63% likely)
-```
-
 ## Initial setup
 
 ```console
@@ -22,13 +9,39 @@ cd geotensorflow
 (./inception5h/download.sh)
 ```
 
-## Run Inception v5
+## Run Inception baseline (normalizing images with Inception stats)
+
 ```console
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
 sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
 ```
+
+![cropped panda](cropped_panda.jpg)
+```
+BEST MATCH: giant panda (95.23% likely)
+```
+
+![grace hopper](grace_hopper.jpg)
+```
+BEST MATCH: military uniform (28.92% likely)
+```
+
+![train 1](train_1.jpg)
+
+```
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 10000](train_10000.jpg)
+
+```
+BEST MATCH: nematode (9.63% likely)
+```
+
+## Run Inception v5
+
 
 ## Improve with Raster Vision
 
