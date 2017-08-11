@@ -13,9 +13,6 @@ cd geotensorflow
 
 ```console
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
-sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
-sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
-sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
 ```
 
 ![cropped panda](cropped_panda.jpg)
@@ -23,12 +20,24 @@ sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
 BEST MATCH: giant panda (95.23% likely)
 ```
 
+```console
+sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
+```
+
 ![grace hopper](grace_hopper.jpg)
 ```
 BEST MATCH: military uniform (28.92% likely)
 ```
 
+```console
+sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
+```
+
 ![train 1](train_1.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
+```
 
 ```
 BEST MATCH: nematode (9.63% likely)
