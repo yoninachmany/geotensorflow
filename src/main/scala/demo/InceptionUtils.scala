@@ -66,8 +66,9 @@ object InceptionUtils {
 
   def executeInceptionGraph(graphDef: Array[Byte], image: Tensor, modelDir: String): Array[Float] = {
     val isInception5h: Boolean = modelDir == "inception5h"
-    val inputOp: String = if (isInception5h) "input" else "input_2"
-    val outputOp: String = if (isInception5h) "output" else "predictions/Softmax"
+    val wasProvided: Boolean = modelDir != "inception3-handmade"
+    val inputOp: String = if (wasProvided) "input" else "input_2"
+    val outputOp: String = if (isInception5h) "output" else (if (wasProvided) "InceptionV3/Predictions/Reshape_1" else "predictions/Softmax")
     LabelImageUtils.executePreTrainedGraph(graphDef, image, inputOp, outputOp)
   }
 
