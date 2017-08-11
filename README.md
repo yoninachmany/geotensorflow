@@ -82,7 +82,11 @@ BEST MATCH: nematode (2.16% likely)
 
 ## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
 
-### TLDR: same model, slightly different results - is Python freezing code wrong or Scala running code wrong? ¯\\_(ツ)_/¯
+### TLDR: should be the same model as above, but slightly different results
+
+### Is Inception v3 2016_08_28 the same as Keras Inception v3? Should be
+
+### Is Python freezing code wrong or Scala running code wrong? ¯\\_(ツ)_/¯
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
