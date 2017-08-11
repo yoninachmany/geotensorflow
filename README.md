@@ -15,22 +15,28 @@ cd geotensorflow
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
 ```
 
-![cropped panda](cropped_panda.jpg)
 ```
 BEST MATCH: giant panda (95.23% likely)
 ```
+
+![cropped panda](cropped_panda.jpg)
 
 ```console
 sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
 ```
 
-![grace hopper](grace_hopper.jpg)
 ```
 BEST MATCH: military uniform (28.92% likely)
 ```
 
+![grace hopper](grace_hopper.jpg)
+
 ```console
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
+```
+
+```
+BEST MATCH: nematode (9.63% likely)
 ```
 
 ![train 1](train_1.jpg)
@@ -44,10 +50,6 @@ BEST MATCH: nematode (9.63% likely)
 ```
 
 ![train 10000](train_10000.jpg)
-
-```
-BEST MATCH: nematode (9.63% likely)
-```
 
 ## Run Inception v5
 
