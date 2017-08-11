@@ -1,7 +1,7 @@
 GeoTensorFlow
 =======================
 
-## Predict labels on rasters processed by [GeoTrellis](https://geotrellis.io/) with pretrained [Raster Vision](https://github.com/azavea/raster-vision) models
+## Demo: Improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis(https://github.com/azavea/raster-vision) models
 
 ![Regular image](cropped_panda.jpg)
 ```
@@ -13,8 +13,6 @@ BEST MATCH: giant panda (95.23% likely)
 ```
 BEST MATCH: nematode (9.63% likely)
 ```
-
-## Demo: Improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis
 
 ## Initial setup
 
