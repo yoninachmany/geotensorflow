@@ -46,7 +46,7 @@ BEST MATCH: nematode (9.63% likely)
 
 ## Run Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
 
-### TLDR: different model, different results
+### TLDR: different model, different results - but ALSO different from [expected probabilities](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api)?
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 cropped_panda.jpg"
