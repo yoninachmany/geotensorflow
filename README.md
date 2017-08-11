@@ -46,7 +46,7 @@ BEST MATCH: nematode (9.63% likely)
 
 ## Run Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
 
-TLDR: different model, different results
+### TLDR: different model, different results
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 cropped_panda.jpg"
@@ -81,6 +81,8 @@ BEST MATCH: nematode (2.16% likely)
 ![train 10000](train_10000.jpg)
 
 ## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
+
+### TLDR: same model, slightly different results - is Python freezing code wrong or Scala running code wrong? ¯\_(ツ)_/¯
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
