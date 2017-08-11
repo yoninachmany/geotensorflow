@@ -1,9 +1,18 @@
 GeoTensorFlow
 =======================
 
-## Opportunity: integrate [Raster Vision] trained model predictions with [GeoTrellis](https://geotrellis.io/)
+## Opportunity
 
-## Demo: label image chip from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle)
+### Integrate [Raster Vision](https://github.com/azavea/raster-vision) trained model predictions with [GeoTrellis](https://geotrellis.io/)
+
+## Demo
+
+### Label jpg image chip from [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) read through GeoTrellis MultibandTile using Raster Vision model, stored in [protobuf](https://www.tensorflow.org/extend/tool_developers/#freezing)
+
+## Starting point
+
+### [tensorflow/LabelImage.java](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java)
+
 
 ![Kaggle image](train_1.jpg)
 
