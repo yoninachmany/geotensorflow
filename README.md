@@ -1,14 +1,11 @@
 GeoTensorFlow
 =======================
 
-## Goal: predict labels on rasters processed by [GeoTrellis](https://geotrellis.io/) with pretrained [Raster Vision](https://github.com/azavea/raster-vision) models
+## Predict labels on rasters processed by [GeoTrellis](https://geotrellis.io/) with pretrained [Raster Vision](https://github.com/azavea/raster-vision) models
 
-## Demo: improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis
+## Demo: Improve labeling of [Planet Kaggle](https://github.com/azavea/raster-vision#planet-kaggle) satellite image from InceptionV5 model baseline with Raster Vision and GeoTrellis
 
 ```console
-git clone https://github.com/yoninachmany/geotensorflow.git
-cd geotensorflow
-(./inception5h/download.sh)
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
 ```
 
@@ -26,6 +23,14 @@ sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 
 ```
 BEST MATCH: nematode (9.63% likely)
+```
+
+## Initial setup
+
+```console
+git clone https://github.com/yoninachmany/geotensorflow.git
+cd geotensorflow
+(./inception5h/download.sh)
 ```
 
 ## Improve with Raster Vision
