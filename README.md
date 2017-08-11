@@ -9,7 +9,7 @@ cd geotensorflow
 ./inception5h/download.sh
 ```
 
-## Run Inception v5 baseline (using provided frozen graph and normalization stats)
+## Run Inception v5 baseline (using provided [frozen graph](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L37) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
 
 ```console
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
