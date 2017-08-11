@@ -38,8 +38,8 @@ object InceptionUtils {
     val isInception5h: Boolean = modelDir == "inception5h"
     val H: Int = if (isInception5h) 224 else 299
     val W: Int = if (isInception5h) 224 else 299
-    val mean: Float = if (isInception5h) 117f else 0
-    val scale: Float = if (isInception5h) 1f else 255
+    val mean: Float = if (isInception5h) 117f else 0f
+    val scale: Float = if (isInception5h) 1f else 255f
 
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
