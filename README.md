@@ -43,6 +43,40 @@ BEST MATCH: nematode (9.63% likely)
 
 ![train 10000](train_10000.jpg)
 
+## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb) and [finding normalization stats](https://www.quora.com/Where-can-I-find-the-semantic-labels-for-the-1000-ImageNet-ILSVRC2012-classes-codes)) 
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
+
+BEST MATCH: giant panda (95.23% likely)
+```
+
+![cropped panda](cropped_panda.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade grace_hopper.jpg"
+
+BEST MATCH: military uniform (28.92% likely)
+```
+
+![grace hopper](grace_hopper.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade train_1.jpg"
+
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 1](train_1.jpg)
+
+```console
+sbt "run-main demo.LabelImageInception inception3-handmade train_10000.jpg"
+
+BEST MATCH: nematode (9.63% likely)
+```
+
+![train 10000](train_10000.jpg)
+
 ## Improve with Raster Vision
 
 Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions to setup and run experiments locally.
