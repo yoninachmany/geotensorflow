@@ -84,9 +84,11 @@ BEST MATCH: nematode (2.16% likely)
 
 ### TLDR: should be the same model as above, but slightly different results
 
-### Is Inception v3 2016_08_28 the same as Keras Inception v3? Should be
+### Is the Inception v3 2016_08_28 architecture the same as the Keras Inception v3 architecture?
 
-### Is Python freezing code wrong or Scala running code wrong? ¯\\_(ツ)_/¯
+### Are the Inception v3 2016_08_28 weights the same as the Keras Inception v3 weights?
+
+### If yes to both, then either the Python freezing code or the Scala code is wrong
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
