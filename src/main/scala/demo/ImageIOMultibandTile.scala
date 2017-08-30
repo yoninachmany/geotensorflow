@@ -43,7 +43,10 @@ object ImageIOMultibandTile {
   def convertToMultibandTile(image: BufferedImage): MultibandTile = {
     val numBands = image.getSampleModel.getNumBands
     val tiles = (0 until numBands).map({ i => convertToTile(image, i) })
-    ArrayMultibandTile(tiles.reverse)
+    ArrayMultibandTile(
+      tiles
+      .reverse
+    )
   }
 
   // Copied https://github.com/locationtech/geotrellis/blob/master/geotools/src/main/scala/geotrellis/geotools/GridCoverage2DConverters.scala#L259-L457
