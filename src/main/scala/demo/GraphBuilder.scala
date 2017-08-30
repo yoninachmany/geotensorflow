@@ -116,6 +116,15 @@ class GraphBuilder(g: Graph) {
     normalized
   }
 
+  private def normalizeMultibandTileForInception = true
+  def normalizeMultibandTileForInception(tile: MultibandTile, mean: Float, scale: Float): MultibandTile = {
+    val normalized: MultibandTile =
+      tile.mapBands { (bandIndex, band) =>
+        (band.convert(DoubleConstantNoDataCellType) - mean) / scale
+      }
+    normalized
+  }
+
   /**
    * Decode and normalize a JPEG-encoded image to a uint8 tensor with a GeoTrellis MultibandTile.
    * DecodeJpeg: https://www.tensorflow.org/api_docs/cc/class/tensorflow/ops/decode-jpeg.
@@ -125,4 +134,12 @@ class GraphBuilder(g: Graph) {
     val normalized: MultibandTile = normalizeMultibandTile(tile)
     decodeMultibandTile(normalized)
   }
+
+  def decodeAndNormalizeJpegGeoTrellisForInception(imagePathString: String, mean: Float, scale: Float): Tensor = {
+    var tile: MultibandTile = getMultibandTileFromJpeg(imagePathString)
+    val normalized: MultibandTile = normalizeMultibandTileForInception(tile, mean, scale)
+    decodeMultibandTile(normalized)
+  }
+
+
 }

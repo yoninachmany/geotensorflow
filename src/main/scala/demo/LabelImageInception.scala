@@ -49,9 +49,9 @@ object LabelImageInception {
 
     val graphDef: Array[Byte] = LabelImageUtils.readAllBytesOrExit(InceptionUtils.getGraphPath(modelDir))
     val labels: List[String] = LabelImageUtils.readAllLinesOrExit(InceptionUtils.getLabelsPath(modelDir))
-    val imageBytes: Array[Byte] = LabelImageUtils.readAllBytesOrExit(Paths.get(imageFile));
+    val imagePathString: String = Paths.get(imageFile).toString
 
-    var image: Tensor = InceptionUtils.constructAndExecuteGraphToNormalizeInceptionImage(imageBytes, modelDir)
+    var image: Tensor = InceptionUtils.constructAndExecuteGraphToNormalizeInceptionImageFromPath(imagePathString, modelDir)
     try {
       val labelProbabilities: Array[Float] = InceptionUtils.executeInceptionGraph(graphDef, image, modelDir)
       InceptionUtils.printBestMatch(labelProbabilities, labels)

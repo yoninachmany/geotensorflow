@@ -25,6 +25,45 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.{Arrays, List}
 
 object InceptionUtils {
+  def constructAndExecuteGraphToNormalizeInceptionImageFromPath(imagePathString: String, modelDir: String): Tensor = {
+    var g: Graph = new Graph
+    val b: GraphBuilder = new GraphBuilder(g)
+
+    // Some constants specific to the pre-trained model at:
+    // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
+    //
+    // - The model was trained with images scaled to 224x224 pixels.
+    // - The colors, represented as R, G, B in 1-byte each were converted to
+    //   float using (value - Mean)/Scale.
+    val isInception5h: Boolean = modelDir == "inception5h"
+    val H: Int = if (isInception5h) 224 else 299
+    val W: Int = if (isInception5h) 224 else 299
+    val mean: Float = if (isInception5h) 117f else 0f
+    val scale: Float = if (isInception5h) 1f else 255f
+
+    // Since the graph is being constructed once per execution here, we can use a constant for the
+    // input image. If the graph were to be re-used for multiple input images, a placeholder would
+    // have been more appropriate.
+    var imageTensor: Tensor = b.decodeJpegGeoTrellis(imagePathString)
+    val input: Output = b.constantTensor("input", imageTensor)
+    val output: Output =
+      b.div(
+        b.sub(
+          b.resizeBilinear(
+          b.expandDims(
+            b.cast(input, DataType.FLOAT),
+            b.constant("make_batch", 0)),
+          b.constant("size", Array[Int](H, W))),
+         b.constant("mean", mean)),
+       b.constant("scale", scale))
+
+    val s: Session = new Session(g)
+    val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
+    result
+    // g.close
+    // s.close
+  }
+
   def constructAndExecuteGraphToNormalizeInceptionImage(imageBytes: Array[Byte], modelDir: String): Tensor = {
     var g: Graph = new Graph
     val b: GraphBuilder = new GraphBuilder(g)
