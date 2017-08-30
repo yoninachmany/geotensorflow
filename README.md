@@ -74,26 +74,6 @@ sbt "run-main demo.LabelImageInception inception3-handmade train_1.jpg"
 BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 ```
 
-```console
-sbt "run-main demo.LabelImageRasterVision tagging/7_17_17/resnet_transform/0 train_1.jpg"
-```
-
-```
-agriculture artisinal_mine bare_ground blow_down clear cloudy cultivation habitation haze partly_cloudy primary road 
-MATCH: agriculture (93.61% likely)
-MATCH: artisinal_mine (56.18% likely)
-MATCH: bare_ground (74.19% likely)
-MATCH: blow_down (53.86% likely)
-MATCH: clear (82.79% likely)
-MATCH: cloudy (61.66% likely)
-MATCH: cultivation (46.70% likely)
-MATCH: habitation (96.16% likely)
-MATCH: haze (33.61% likely)
-MATCH: partly_cloudy (46.89% likely)
-MATCH: primary (88.13% likely)
-MATCH: road (55.77% likely)
-```
-
 ![train 10000](train_10000.jpg)
 
 ```console
@@ -133,3 +113,21 @@ BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 ## Improve with Raster Vision
 
 Follow the [Raster Vision](https://github.com/azavea/raster-vision) instructions to setup and run experiments locally.
+
+```console
+sbt "run-main demo.LabelImageRasterVision tagging/7_17_17/resnet_transform/0 train_1.jpg"
+
+agriculture artisinal_mine bare_ground blow_down clear cloudy cultivation habitation haze partly_cloudy primary road 
+MATCH: agriculture (93.61% likely)
+MATCH: artisinal_mine (56.18% likely)
+MATCH: bare_ground (74.19% likely)
+MATCH: blow_down (53.86% likely)
+MATCH: clear (82.79% likely)
+MATCH: cloudy (61.66% likely)
+MATCH: cultivation (46.70% likely)
+MATCH: habitation (96.16% likely)
+MATCH: haze (33.61% likely)
+MATCH: partly_cloudy (46.89% likely)
+MATCH: primary (88.13% likely)
+MATCH: road (55.77% likely)
+```
