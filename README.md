@@ -102,15 +102,17 @@ sbt "run-main demo.LabelImageInception inception3-handmade train_10000.jpg"
 BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 ```
 
-### TLDR: different model, different results - but ALSO different from [expected probabilities](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api)?
+## Observations
 
-### TLDR: should be the same model as above, but slightly different results
+* Inception v3, v5: different model, different results - but ALSO different from [expected probabilities](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api)?
 
-### Is the Inception v3 2016_08_28 architecture the same as the Keras Inception v3 architecture?
+* Inception v3, given and handmade, should be the same, but slightly different results
 
-### Are the Inception v3 2016_08_28 weights the same as the Keras Inception v3 weights?
+* Is the Inception v3 2016_08_28 architecture the same as the Keras Inception v3 architecture?
 
-### If yes to both, then either the Python freezing code or the Scala code is wrong
+* Are the Inception v3 2016_08_28 weights the same as the Keras Inception v3 weights?
+
+* If yes to both, then either the Python freezing code or the Scala code is wrong
 
 ## Improve with Raster Vision
 
