@@ -44,21 +44,20 @@ object InceptionUtils {
     // Since the graph is being constructed once per execution here, we can use a constant for the
     // input image. If the graph were to be re-used for multiple input images, a placeholder would
     // have been more appropriate.
-    var imageTensor: Tensor = b.decodeAndNormalizeJpegGeoTrellisForInception(imagePathString, mean, scale)
+    var imageTensor: Tensor = b.decodeJpegGeoTrellis(imagePathString)
     val input: Output = b.constantTensor("input", imageTensor)
     val output: Output =
       b.div(
         b.sub(
           b.resizeBilinear(
-          b.expandDims(
-            b.cast(input, DataType.FLOAT),
-            b.constant("make_batch", 0)),
-          b.constant("size", Array[Int](H, W))),
-          b.constant("mean", mean)),
-        b.constant("scale", scale))
+            b.expandDims(
+              b.cast(input, DataType.FLOAT),
+              b.constant("make_batch", 0)),
+            b.constant("size", Array[Int](H, W))),
+           b.constant("mean", mean)),
+         b.constant("scale", scale))
 
     val s: Session = new Session(g)
-    return s.runner.fetch(output.op.name).run.get(0)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
     result
     // g.close
