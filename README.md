@@ -46,7 +46,7 @@ BEST MATCH: nematode (9.63% likely)
 
 ## Run Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
 
-TLDR: different model, different results
+### TLDR: different model, different results - but ALSO different from [expected probabilities](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api)?
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 cropped_panda.jpg"
@@ -81,6 +81,14 @@ BEST MATCH: nematode (2.16% likely)
 ![train 10000](train_10000.jpg)
 
 ## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
+
+### TLDR: should be the same model as above, but slightly different results
+
+### Is the Inception v3 2016_08_28 architecture the same as the Keras Inception v3 architecture?
+
+### Are the Inception v3 2016_08_28 weights the same as the Keras Inception v3 weights?
+
+### If yes to both, then either the Python freezing code or the Scala code is wrong
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
