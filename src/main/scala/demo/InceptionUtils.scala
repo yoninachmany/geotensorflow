@@ -50,12 +50,12 @@ object InceptionUtils {
       b.div(
         b.sub(
           b.resizeBilinear(
-            b.expandDims(
-              b.cast(input, DataType.FLOAT),
-              b.constant("make_batch", 0)),
-            b.constant("size", Array[Int](H, W))),
-           b.constant("mean", mean)),
-         b.constant("scale", scale))
+          b.expandDims(
+            b.cast(input, DataType.FLOAT),
+            b.constant("make_batch", 0)),
+          b.constant("size", Array[Int](H, W))),
+         b.constant("mean", mean)),
+       b.constant("scale", scale))
 
     val s: Session = new Session(g)
     val result: Tensor = s.runner.fetch(output.op.name).run.get(0)
