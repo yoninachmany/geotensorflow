@@ -26,21 +26,21 @@ cd geotensorflow
 sbt "run-main demo.LabelImageInception inception5h cropped_panda.jpg"
 
 BEST MATCH: giant panda (95.23% likely)
-BEST MATCH: giant panda (93.52% likely)
+BEST MATCH: giant panda (93.47% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 cropped_panda.jpg"
 
 BEST MATCH: giant panda (81.60% likely)
-BEST MATCH: nematode (2.17% likely)
+BEST MATCH: giant panda (81.50% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade cropped_panda.jpg"
 
 BEST MATCH: n02510455 giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca (83.17% likely)
-BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
+BEST MATCH: n02510455 giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca (83.22% likely)
 ```
 
 ![grace hopper](grace_hopper.jpg)
@@ -49,21 +49,21 @@ BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 sbt "run-main demo.LabelImageInception inception5h grace_hopper.jpg"
 
 BEST MATCH: military uniform (28.92% likely)
-BEST MATCH: military uniform (33.88% likely)
+BEST MATCH: military uniform (29.60% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 grace_hopper.jpg"
 
 BEST MATCH: military uniform (87.42% likely)
-BEST MATCH: nematode (2.28% likely)
+BEST MATCH: military uniform (88.88% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade grace_hopper.jpg"
 
 BEST MATCH: n03763968 military uniform (82.85% likely)
-BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.42% likely)
+BEST MATCH: n03763968 military uniform (85.23% likely)
 ```
 
 ## Test Satellite Images
@@ -74,21 +74,21 @@ BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.42% likely)
 sbt "run-main demo.LabelImageInception inception5h train_1.jpg"
 
 BEST MATCH: nematode (9.63% likely)
-BEST MATCH: nail (15.76% likely)
+BEST MATCH: nail (12.81% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 train_1.jpg"
 
 BEST MATCH: nematode (2.16% likely)
-BEST MATCH: nematode (2.16% likely)
+BEST MATCH: space shuttle (87.14% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade train_1.jpg"
 
 BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
-BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
+BEST MATCH: n04266014 space shuttle (79.95% likely)
 ```
 
 ![train 10000](train_10000.jpg)
@@ -97,21 +97,21 @@ BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 sbt "run-main demo.LabelImageInception inception5h train_10000.jpg"
 
 BEST MATCH: nematode (9.63% likely)
-BEST MATCH: nail (7.86% likely)
+BEST MATCH: nail (7.00% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3 train_10000.jpg"
 
 BEST MATCH: nematode (2.16% likely)
-BEST MATCH: nematode (2.16% likely)
+BEST MATCH: wall clock (5.80% likely)
 ```
 
 ```console
 sbt "run-main demo.LabelImageInception inception3-handmade train_10000.jpg"
 
 BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
-BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
+BEST MATCH: n04548280 wall clock (5.10% likely)
 ```
 
 ## Observations
