@@ -10,6 +10,14 @@ cd geotensorflow
 ./inception3/download.sh
 ```
 
+## Model list
+
+* Inception v5 baseline (using provided [frozen graph](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L37) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
+
+* Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
+
+* [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
+
 ## Test Normal Images
 
 ![cropped panda](cropped_panda.jpg)
@@ -94,13 +102,7 @@ sbt "run-main demo.LabelImageInception inception3-handmade train_10000.jpg"
 BEST MATCH: n01930112 nematode, nematode worm, roundworm (2.36% likely)
 ```
 
-## Run Inception v5 baseline (using provided [frozen graph](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L37) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
-
-## Run Inception v3 baseline (using provided [frozen graph](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api) and [normalization stats](https://github.com/tensorflow/tensorflow/blob/r1.2/tensorflow/java/src/main/java/org/tensorflow/examples/LabelImage.java#L85-L86))
-
 ### TLDR: different model, different results - but ALSO different from [expected probabilities](https://www.tensorflow.org/tutorials/image_recognition#usage_with_the_c_api)?
-
-## Test [Keras Inception v3](https://keras.io/applications/#inceptionv3) ([making frozen graph](https://github.com/yoninachmany/geotensorflow/blob/master/inception3-homemade/Raster%2BVision%2Bmodel%2Bto%2BTensorFlow%2Bprotobuf.ipynb)) 
 
 ### TLDR: should be the same model as above, but slightly different results
 
